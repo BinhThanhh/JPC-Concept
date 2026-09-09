@@ -353,21 +353,6 @@
         '<div class="form-error" id="add-concept-error"></div>' +
         '<button class="btn btn-primary" id="add-concept-btn" style="padding:12px 28px; font-size:0.95rem;">🌸 Đăng Concept & Đồng bộ GitHub</button>' +
         '</div>' +
-
-        // Block 3: Sao lưu / Phục hồi
-        '<div class="admin-block">' +
-        '<h3>💾 Sao lưu & Phục hồi dữ liệu JSON</h3>' +
-        '<p style="font-size:0.88rem; color:var(--ink-soft); margin-bottom:14px;">' +
-        'Xuất dữ liệu gốc ra máy tính hoặc nạp dữ liệu từ file sao lưu.' +
-        '</p>' +
-        '<div style="display:flex; gap:12px; flex-wrap:wrap;">' +
-        '<button type="button" class="btn btn-outline" id="export-json-btn">⬇️ Xuất dữ liệu JSON</button>' +
-        '<label class="btn btn-outline" style="cursor:pointer; margin:0;">' +
-        '⬆️ Nhập dữ liệu JSON' +
-        '<input type="file" id="import-json-file" accept=".json" style="display:none;">' +
-        '</label>' +
-        '</div>' +
-        '</div>' +
         '</div>';
 
       // Xử lý Upload file ảnh cho Concept Mới
@@ -770,42 +755,6 @@
           self.renderDashboard(container, appState, onDataChange);
         });
       }
-
-      // Xuất JSON Backup
-      document.getElementById('export-json-btn').addEventListener('click', function () {
-        var str = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(appState, null, 2));
-        var downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute('href', str);
-        downloadAnchor.setAttribute('download', 'yourJPconcept-backup-' + new Date().toISOString().slice(0, 10) + '.json');
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-      });
-
-      // Nhập JSON Backup & Tự Động Đồng Bộ GitHub
-      document.getElementById('import-json-file').addEventListener('change', function (e) {
-        var file = e.target.files[0];
-        if (!file) return;
-        var reader = new FileReader();
-        reader.onload = async function (evt) {
-          try {
-            var imported = JSON.parse(evt.target.result);
-            if (imported.concepts && Array.isArray(imported.concepts)) {
-              appState.concepts = imported.concepts;
-              appState.lastReset = imported.lastReset;
-              await window.JpStorage.saveData(appState, 'Imported concepts JSON backup [skip ci]');
-              window.showToast('Đã nạp dữ liệu từ file JSON và đồng bộ lên GitHub!');
-              if (onDataChange) onDataChange();
-              self.renderDashboard(container, appState, onDataChange);
-            } else {
-              alert('File JSON không đúng định dạng yourJPconcept.');
-            }
-          } catch (err) {
-            alert('Lỗi đọc file JSON: ' + err.message);
-          }
-        };
-        reader.readAsText(file);
-      });
     },
   };
 

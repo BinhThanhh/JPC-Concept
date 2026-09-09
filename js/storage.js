@@ -218,7 +218,7 @@
     var config = getGitHubConfig();
     var remoteData = null;
 
-    // 1. Thử lấy từ GitHub Raw hoặc API nếu có token (dành cho Admin)
+    // 1. Thử lấy từ GitHub API nếu có token (dành cho Admin)
     if (config.token) {
       try {
         var apiUrl = 'https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/' + config.path + '?ref=' + config.branch + '&t=' + Date.now();
@@ -227,6 +227,7 @@
             Authorization: 'Bearer ' + config.token.trim(),
             Accept: 'application/vnd.github.v3+json',
           },
+          cache: 'no-cache',
         });
         if (apiRes.ok) {
           var fileData = await apiRes.json();
@@ -244,14 +245,58 @@
           }
         }
       } catch (e) {
-        console.warn('Không thể tải qua GitHub API, thử tải file local:', e);
+        console.warn('Không thể tải qua GitHub API có token:', e);
       }
     }
 
-    // 2. Thử tải file tĩnh data/data.json đi kèm trang web
+    // 2. Thử lấy trực tiếp từ GitHub Raw CDN (Thời gian thực, không chờ GitHub Pages build, không cần token)
     if (!remoteData) {
       try {
-        var staticRes = await fetch('data/data.json?t=' + Date.now());
+        var rawUrl = 'https://raw.githubusercontent.com/' + config.owner + '/' + config.repo + '/' + config.branch + '/' + config.path + '?t=' + Date.now();
+        var rawRes = await fetch(rawUrl, { cache: 'no-cache' });
+        if (rawRes.ok) {
+          var rawJson = await rawRes.json();
+          var decryptedRaw = await window.JpCrypto.decrypt(rawJson);
+          if (decryptedRaw && decryptedRaw.concepts) {
+            remoteData = decryptedRaw;
+            syncState.status = 'success';
+            syncState.message = 'Đã tải dữ liệu mới nhất từ GitHub';
+            syncState.lastSyncTime = new Date();
+            notifySyncChange();
+          }
+        }
+      } catch (e) {
+        console.warn('Không thể tải qua GitHub Raw CDN:', e);
+      }
+    }
+
+    // 3. Thử lấy qua GitHub API công khai (không cần token)
+    if (!remoteData) {
+      try {
+        var pubApiUrl = 'https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/' + config.path + '?ref=' + config.branch + '&t=' + Date.now();
+        var pubRes = await fetch(pubApiUrl, {
+          headers: { Accept: 'application/vnd.github.v3+json' },
+          cache: 'no-cache',
+        });
+        if (pubRes.ok) {
+          var pubData = await pubRes.json();
+          syncState.githubSha = pubData.sha;
+          var decodedContent = decodeURIComponent(escape(window.atob(pubData.content.replace(/\s/g, ''))));
+          var rawJson = JSON.parse(decodedContent);
+          var decryptedPub = await window.JpCrypto.decrypt(rawJson);
+          if (decryptedPub && decryptedPub.concepts) {
+            remoteData = decryptedPub;
+          }
+        }
+      } catch (e) {
+        console.warn('Không thể tải qua GitHub API công khai:', e);
+      }
+    }
+
+    // 4. Thử tải file tĩnh data/data.json đi kèm trang web (fallback dự phòng)
+    if (!remoteData) {
+      try {
+        var staticRes = await fetch('data/data.json?t=' + Date.now(), { cache: 'no-cache' });
         if (staticRes.ok) {
           var rawStaticJson = await staticRes.json();
           var decryptedStatic = await window.JpCrypto.decrypt(rawStaticJson);
