@@ -9,6 +9,7 @@
   var appState = {
     concepts: [],
     lastReset: null,
+    voteDeadline: null,
     loaded: false,
     sakuraEnabled: true,
   };
@@ -38,6 +39,45 @@
     var m2 = String(url).match(/drive\.google\.com\/(?:open|uc|thumbnail)\?(?:[^"']*&)?id=([a-zA-Z0-9_-]+)/);
     if (m2) return 'https://drive.google.com/thumbnail?id=' + m2[1] + '&sz=w1000';
     return url;
+  }
+
+  // Kiểm tra bình chọn đã kết thúc chưa
+  function isVotingClosed() {
+    if (!appState.voteDeadline) return false;
+    var d = new Date(appState.voteDeadline).getTime();
+    return !isNaN(d) && Date.now() >= d;
+  }
+
+  // Định dạng ngày giờ chuẩn tiếng Việt
+  function formatDateTime(isoOrStr) {
+    if (!isoOrStr) return '';
+    var d = new Date(isoOrStr);
+    if (isNaN(d.getTime())) return '';
+    var hours = String(d.getHours()).padStart(2, '0');
+    var minutes = String(d.getMinutes()).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    var month = String(d.getMonth() + 1).padStart(2, '0');
+    var year = d.getFullYear();
+    return hours + ':' + minutes + ' ngày ' + day + '/' + month + '/' + year;
+  }
+
+  // Tính thời gian còn lại
+  function getRemainingTimeText(isoOrStr) {
+    if (!isoOrStr) return null;
+    var target = new Date(isoOrStr).getTime();
+    if (isNaN(target)) return null;
+    var diff = target - Date.now();
+    if (diff <= 0) return 'Đã hết hạn';
+
+    var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    if (days > 0) {
+      return days + ' ngày ' + hours + ' giờ ' + minutes + ' phút ' + seconds + ' giây';
+    }
+    return hours + ' giờ ' + minutes + ' phút ' + seconds + ' giây';
   }
 
   // Khởi tạo Sakura Petals
@@ -107,7 +147,6 @@
       var adminLink = document.querySelector('#site-nav a[href="#/admin"]');
       if (adminLink) adminLink.classList.add('active');
       window.JpAdmin.render(appContainer, appState, function () {
-        // Callback khi data trong admin thay đổi
         window.JpStorage.saveData(appState);
       });
     } else {
@@ -124,6 +163,22 @@
     var votedMap = window.JpStorage.getVotedMap();
     var concepts = appState.concepts || [];
     var totalVotes = concepts.reduce(function (sum, c) { return sum + (c.votes || 0); }, 0);
+    var closed = isVotingClosed();
+
+    var deadlineHtml = '';
+    if (appState.voteDeadline) {
+      if (closed) {
+        deadlineHtml =
+          '<div class="deadline-status-badge closed">' +
+            '<span>🔒 Bình chọn đã kết thúc lúc: <strong>' + escapeHtml(formatDateTime(appState.voteDeadline)) + '</strong></span>' +
+          '</div>';
+      } else {
+        deadlineHtml =
+          '<div class="deadline-status-badge active">' +
+            '<span>⏳ Hạn bình chọn: <strong>' + escapeHtml(formatDateTime(appState.voteDeadline)) + '</strong> (Còn: <strong id="countdown-val">' + escapeHtml(getRemainingTimeText(appState.voteDeadline)) + '</strong>)</span>' +
+          '</div>';
+      }
+    }
 
     // Sắp xếp theo số lượt bình chọn giảm dần
     var sorted = concepts.slice().sort(function (a, b) {
@@ -134,6 +189,9 @@
       var hasVoted = !!votedMap[c.id];
       var percent = totalVotes > 0 ? Math.round(((c.votes || 0) / totalVotes) * 100) : 0;
       var rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
+
+      var btnText = closed ? '🔒 Đã đóng bình chọn' : (hasVoted ? 'Đã bình chọn ✓' : '🌸 Bình chọn');
+      var btnDisabled = closed || hasVoted;
 
       return (
         '<article class="concept-card" data-card-id="' + c.id + '">' +
@@ -156,8 +214,8 @@
               '</div>' +
             '</div>' +
             '<div class="concept-actions">' +
-              '<button type="button" class="btn btn-vote" data-vote-btn="' + c.id + '" ' + (hasVoted ? 'disabled' : '') + '>' +
-                (hasVoted ? 'Đã bình chọn ✓' : '🌸 Bình chọn') +
+              '<button type="button" class="btn btn-vote" data-vote-btn="' + c.id + '" ' + (btnDisabled ? 'disabled' : '') + '>' +
+                btnText +
               '</button>' +
               '<button type="button" class="btn btn-outline" data-nav-detail="' + c.id + '" style="padding:10px 14px;" title="Xem chi tiết & ấn phẩm">Chi tiết</button>' +
             '</div>' +
@@ -180,10 +238,11 @@
             '<h1>Concept nào xứng đáng lên sân khấu tiếp theo?</h1>' +
             '<p>Khám phá trọn bộ 4 concept độc đáo (Avatar, Ảnh bìa, Standee, Vé sự kiện, Card và Bảng màu). Bình chọn cho phong cách bạn yêu thích nhất để cùng định hình sự kiện sắp tới!</p>' +
             '<div class="hero-stats-badge">' +
-              '<span>🌸 Đang mở bình chọn</span>' +
+              '<span>' + (closed ? '🔒 Đã kết thúc bình chọn' : '🌸 Đang mở bình chọn') + '</span>' +
               '<span>•</span>' +
               '<span>Tổng cộng: <strong>' + totalVotes + '</strong> lượt vote</span>' +
             '</div>' +
+            (deadlineHtml ? '<div style="margin-top:4px;">' + deadlineHtml + '</div>' : '') +
           '</div>' +
         '</div>' +
       '</section>' +
@@ -206,6 +265,24 @@
       '</main>';
 
     initSakura(document.getElementById('sakura-bg'));
+
+    // Countdown live update
+    if (appState._countdownTimer) clearInterval(appState._countdownTimer);
+    if (appState.voteDeadline && !closed) {
+      appState._countdownTimer = setInterval(function () {
+        var el = document.getElementById('countdown-val');
+        if (!el) {
+          clearInterval(appState._countdownTimer);
+          return;
+        }
+        if (isVotingClosed()) {
+          clearInterval(appState._countdownTimer);
+          renderHome(container);
+          return;
+        }
+        el.textContent = getRemainingTimeText(appState.voteDeadline);
+      }, 1000);
+    }
 
     // Gắn sự kiện chuyển trang chi tiết
     container.querySelectorAll('[data-nav-detail]').forEach(function (el) {
@@ -245,7 +322,11 @@
     }
 
     var hasVoted = !!votedMap[c.id];
+    var closed = isVotingClosed();
     var assets = c.assets || [];
+
+    var detailBtnText = closed ? '🔒 Bình chọn đã kết thúc' : (hasVoted ? 'Đã bình chọn ✓' : '🌸 Bình chọn cho Concept này');
+    var detailBtnDisabled = closed || hasVoted;
 
     var justificationHtml = c.justification ? (
       '<div class="justification-section">' +
@@ -294,14 +375,15 @@
           '<div class="detail-info">' +
             '<h1 class="detail-name">' + escapeHtml(c.name) + '</h1>' +
             '<div class="detail-vote-row">' +
-              '<button type="button" class="btn btn-vote" data-detail-vote="' + c.id + '" ' + (hasVoted ? 'disabled' : '') + '>' +
-                (hasVoted ? 'Đã bình chọn ✓' : '🌸 Bình chọn cho Concept này') +
+              '<button type="button" class="btn btn-vote" data-detail-vote="' + c.id + '" ' + (detailBtnDisabled ? 'disabled' : '') + '>' +
+                detailBtnText +
               '</button>' +
               '<div class="detail-vote-count-box">' +
                 '<span class="detail-vote-count-num">' + (c.votes || 0) + '</span>' +
                 '<span style="font-size:0.82rem; color:var(--ink-soft);">lượt bình chọn</span>' +
               '</div>' +
             '</div>' +
+            (closed ? '<div style="margin-top:8px; font-size:0.88rem; color:var(--vermillion);">🔒 Thời gian bình chọn đã kết thúc lúc ' + escapeHtml(formatDateTime(appState.voteDeadline)) + '.</div>' : '') +
             '<div class="divider"></div>' +
             '<div class="detail-desc-title">Mô tả Concept:</div>' +
             '<p class="detail-desc">' + escapeHtml(c.description || '') + '</p>' +
@@ -313,7 +395,7 @@
 
     // Sự kiện Vote ở trang chi tiết
     var voteBtn = container.querySelector('[data-detail-vote]');
-    if (voteBtn) {
+    if (voteBtn && !detailBtnDisabled) {
       voteBtn.addEventListener('click', function () {
         handleVote(c.id, function () {
           renderDetail(id, container);
@@ -334,6 +416,11 @@
 
   // ---------- Xử lý Bình chọn (Vote Logic) ----------
   async function handleVote(conceptId, onComplete) {
+    if (isVotingClosed()) {
+      window.showToast('🔒 Bình chọn đã kết thúc lúc ' + formatDateTime(appState.voteDeadline) + '!');
+      return;
+    }
+
     var votedMap = window.JpStorage.getVotedMap();
     if (votedMap[conceptId]) {
       window.showToast('Bạn đã bình chọn cho concept này rồi!');
@@ -362,6 +449,7 @@
     var loadedData = await window.JpStorage.loadData();
     appState.concepts = (loadedData && loadedData.concepts) ? loadedData.concepts : [];
     appState.lastReset = loadedData ? loadedData.lastReset : null;
+    appState.voteDeadline = loadedData ? loadedData.voteDeadline : null;
     appState.loaded = true;
 
     // 4. Thiết lập công tắc hoa anh đào

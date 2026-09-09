@@ -100,6 +100,55 @@
     return url;
   }
 
+  // Kiểm tra thời hạn bình chọn
+  function isVotingClosed(deadline) {
+    if (!deadline) return false;
+    var d = new Date(deadline).getTime();
+    return !isNaN(d) && Date.now() >= d;
+  }
+
+  function formatDateTime(isoOrStr) {
+    if (!isoOrStr) return '';
+    var d = new Date(isoOrStr);
+    if (isNaN(d.getTime())) return '';
+    var hours = String(d.getHours()).padStart(2, '0');
+    var minutes = String(d.getMinutes()).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    var month = String(d.getMonth() + 1).padStart(2, '0');
+    var year = d.getFullYear();
+    return hours + ':' + minutes + ' ngày ' + day + '/' + month + '/' + year;
+  }
+
+  function getRemainingTimeText(isoOrStr) {
+    if (!isoOrStr) return null;
+    var target = new Date(isoOrStr).getTime();
+    if (isNaN(target)) return null;
+    var diff = target - Date.now();
+    if (diff <= 0) return 'Đã hết hạn';
+
+    var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60));
+    var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    if (days > 0) {
+      return days + ' ngày ' + hours + ' giờ ' + minutes + ' phút';
+    }
+    return hours + ' giờ ' + minutes + ' phút ' + seconds + ' giây';
+  }
+
+  function toLocalDatetimeValue(isoOrStr) {
+    if (!isoOrStr) return '';
+    var d = new Date(isoOrStr);
+    if (isNaN(d.getTime())) return '';
+    var year = d.getFullYear();
+    var month = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    var hours = String(d.getHours()).padStart(2, '0');
+    var minutes = String(d.getMinutes()).padStart(2, '0');
+    return year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
+  }
+
   // Đọc file ảnh từ máy tính sang Data URL (Base64)
   function readFileAsDataURL(file) {
     return new Promise(function (resolve, reject) {
@@ -293,6 +342,18 @@
         );
       }).join('') : '<p style="color:var(--ink-soft); text-align:center; padding:30px;">Chưa có concept nào trong hệ thống.</p>';
 
+      var isClosed = isVotingClosed(appState.voteDeadline);
+      var deadlineStatusHtml = '';
+      if (appState.voteDeadline) {
+        if (isClosed) {
+          deadlineStatusHtml = '<span class="deadline-pill closed">🔒 Đã hết hạn (' + escapeHtml(formatDateTime(appState.voteDeadline)) + ')</span>';
+        } else {
+          deadlineStatusHtml = '<span class="deadline-pill active">⏳ Đang mở (Hạn: ' + escapeHtml(formatDateTime(appState.voteDeadline)) + ' — Còn: ' + escapeHtml(getRemainingTimeText(appState.voteDeadline)) + ')</span>';
+        }
+      } else {
+        deadlineStatusHtml = '<span class="deadline-pill open">🌐 Không giới hạn (Mở tự do)</span>';
+      }
+
       container.innerHTML =
         '<div class="admin-panel">' +
         '<div class="admin-topbar">' +
@@ -307,7 +368,27 @@
         '</div>' +
         '</div>' +
 
-        // Block 1: Danh sách Concept & Reset Toàn Bộ Vote
+        // Block 1: Cài Đặt Thời Hạn Bình Chọn
+        '<div class="admin-block">' +
+        '<div class="admin-block-header">' +
+        '<h3>⏱️ Thời Hạn Bình Chọn</h3>' +
+        deadlineStatusHtml +
+        '</div>' +
+        '<p style="font-size:0.88rem; color:var(--ink-soft); margin-bottom:16px; line-height:1.5;">' +
+        'Thiết lập ngày và giờ kết thúc bình chọn. Sau thời gian này, các nút bình chọn trên trang chủ và trang chi tiết sẽ tự động đóng lại.' +
+        '</p>' +
+        '<div class="field" style="max-width:320px;">' +
+        '<label for="deadline-input">Mốc thời gian kết thúc bình chọn</label>' +
+        '<input type="datetime-local" id="deadline-input" value="' + escapeHtml(toLocalDatetimeValue(appState.voteDeadline)) + '">' +
+        '<div class="field-hint">Hệ thống tự động quy đổi theo giờ địa phương của bạn.</div>' +
+        '</div>' +
+        '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">' +
+        '<button type="button" class="btn btn-primary" id="save-deadline-btn" style="font-size:0.88rem; padding:8px 18px;">⏱️ Lưu thời hạn & Đồng bộ</button>' +
+        (appState.voteDeadline ? '<button type="button" class="btn btn-outline" id="clear-deadline-btn" style="font-size:0.88rem; padding:8px 18px;">Gỡ bỏ thời hạn (Mở vô thời hạn)</button>' : '') +
+        '</div>' +
+        '</div>' +
+
+        // Block 2: Danh sách Concept & Reset Toàn Bộ Vote
         '<div class="admin-block">' +
         '<div class="admin-block-header">' +
         '<h3>📋 Danh sách Concept (' + sorted.length + ')</h3>' +
@@ -316,7 +397,7 @@
         conceptRowsHtml +
         '</div>' +
 
-        // Block 2: Thêm Concept Mới
+        // Block 3: Thêm Concept Mới
         '<div class="admin-block">' +
         '<h3>➕ Thêm Concept Mới</h3>' +
         '<div class="field">' +
@@ -751,6 +832,56 @@
 
           await window.JpStorage.saveData(appState, 'Reset all concept votes to 0 [skip ci]');
           window.showToast('Đã đặt lại tất cả lượt bình chọn về 0 và đồng bộ lên GitHub!');
+          if (onDataChange) onDataChange();
+          self.renderDashboard(container, appState, onDataChange);
+        });
+      }
+
+      // Cài đặt Thời Hạn Bình Chọn & Tự Động Đồng Bộ GitHub
+      var saveDeadlineBtn = document.getElementById('save-deadline-btn');
+      if (saveDeadlineBtn) {
+        saveDeadlineBtn.addEventListener('click', async function () {
+          var val = document.getElementById('deadline-input').value;
+          if (!val) {
+            window.showToast('Vui lòng chọn ngày và giờ hoặc ấn Gỡ bỏ thời hạn.');
+            return;
+          }
+          var targetDate = new Date(val);
+          if (isNaN(targetDate.getTime())) {
+            window.showToast('Thời gian không hợp lệ.');
+            return;
+          }
+
+          saveDeadlineBtn.disabled = true;
+          saveDeadlineBtn.textContent = '⏳ Đang lưu thời hạn...';
+
+          appState.voteDeadline = targetDate.toISOString();
+          var res = await window.JpStorage.saveData(appState, 'Set voting deadline to ' + formatDateTime(appState.voteDeadline) + ' [skip ci]');
+          if (res && res.success) {
+            window.showToast('✅ Đã lưu thời hạn bình chọn và đồng bộ lên GitHub!');
+          } else {
+            window.showToast('Đã lưu thời hạn bình chọn!');
+          }
+          if (onDataChange) onDataChange();
+          self.renderDashboard(container, appState, onDataChange);
+        });
+      }
+
+      var clearDeadlineBtn = document.getElementById('clear-deadline-btn');
+      if (clearDeadlineBtn) {
+        clearDeadlineBtn.addEventListener('click', async function () {
+          if (!confirm('Bạn có chắc muốn gỡ bỏ thời hạn (cho phép bình chọn vô thời hạn)?')) return;
+
+          clearDeadlineBtn.disabled = true;
+          clearDeadlineBtn.textContent = '⏳ Đang gỡ...';
+
+          appState.voteDeadline = null;
+          var res = await window.JpStorage.saveData(appState, 'Remove voting deadline [skip ci]');
+          if (res && res.success) {
+            window.showToast('✅ Đã gỡ bỏ thời hạn bình chọn và đồng bộ lên GitHub!');
+          } else {
+            window.showToast('Đã gỡ bỏ thời hạn bình chọn!');
+          }
           if (onDataChange) onDataChange();
           self.renderDashboard(container, appState, onDataChange);
         });

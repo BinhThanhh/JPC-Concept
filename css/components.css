@@ -64,6 +64,38 @@
   color: var(--vermillion);
 }
 
+.deadline-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  margin-top: 10px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.deadline-status-badge.active {
+  background: rgba(184, 134, 11, 0.12);
+  border: 1px solid var(--gold);
+  color: #8C5B00;
+  box-shadow: 0 0 10px rgba(184, 134, 11, 0.2);
+}
+
+.deadline-status-badge.closed {
+  background: rgba(197, 48, 48, 0.1);
+  border: 1px solid var(--vermillion);
+  color: var(--vermillion);
+  box-shadow: 0 0 10px rgba(197, 48, 48, 0.2);
+}
+
+.btn-vote:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+  filter: grayscale(0.2);
+}
+
 /* ---------- Sakura Petals Animation ---------- */
 .sakura-container {
   position: absolute;

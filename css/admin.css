@@ -36,6 +36,7 @@
 .field input[type="text"],
 .field input[type="password"],
 .field input[type="number"],
+.field input[type="datetime-local"],
 .field textarea,
 .field select {
   width: 100%;
@@ -402,6 +403,35 @@
   padding: 4px 10px;
   border-radius: 14px;
   font-size: 0.78rem;
+}
+
+.deadline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.deadline-pill.active {
+  background: rgba(40, 167, 69, 0.12);
+  color: #2e7d32;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.deadline-pill.closed {
+  background: rgba(197, 48, 48, 0.1);
+  color: var(--vermillion);
+  border: 1px solid rgba(197, 48, 48, 0.3);
+}
+
+.deadline-pill.open {
+  background: var(--bg-soft);
+  color: var(--ink-soft);
+  border: 1px solid var(--line);
 }
 
 /* ---------- Responsive ---------- */
