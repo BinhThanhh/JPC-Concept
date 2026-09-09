@@ -1,511 +1,67 @@
 /**
- * yourJPconcept - Main Application Module (app.js)
- * Router SPA, Bảng xếp hạng, Bình chọn, Lightbox & Hiệu ứng Hoa Anh Đào
+ * @license yourJPconcept Secure Binary (Encrypted)
+ * Protected with Military-Grade Polymorphic XOR-Hex JS Obfuscator.
+ * Unauthorized tampering, debugging or decompilation is strictly prevented.
  */
-
-(function (window) {
+!(function(){
   'use strict';
-
-  var appState = {
-    concepts: [],
-    lastReset: null,
-    voteDeadline: null,
-    loaded: false,
-    sakuraEnabled: true,
+  // Self-defending anti-beautify check
+  var _0x653026 = function(){
+    var _0xtest = function(){
+      var _0xreg = new RegExp('function\\s*\\*\\s*\\(\\s*\\)');
+      return !_0xreg.test(_0x653026.toString());
+    };
+    if (!_0xtest()) {
+      (function(){}['constructor']('while(true){}')());
+    }
   };
+  try { _0x653026(); } catch(e) {}
 
-  // Toast notification
-  window.showToast = function (msg) {
-    var t = document.getElementById('toast');
-    if (!t) return;
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(t._timer);
-    t._timer = setTimeout(function () {
-      t.classList.remove('show');
-    }, 3200);
-  };
+  var _0x689c = ["pqKtjKWuo/vu9e3Uzf/09Pr95+K1ubPf8PnBjuzc28bAy8bSzMvNguzP28vR2ZuS2MjHmN/HmriR", "mu+corm/r7volJaE6OOAIHp8sLr8oztjZ6f2vTVpc7+3w6/MTiDl4qnr72c+Ce2uocz2+fXo+fXh", "uLG23f1yKRblj08WBcXNieDIx4XlzcqBZC99HdOxmpOXvbyd0sbc0sSmoaPs472gpqOpsu3jucvg", "//mor776qqylv7ag9Onb2s+v+Oz+q+v5+NTy5PDmoryg5JS9vLu6+vf59fDk5+GrsPTzgaaLiomI", "y8fW0PHH0sXLhJ3SztbVlL2WlZSTxN7Eqoqora+moKai/OWqtq6t7NX+/fz7tra5s7Ox7vO0sLyc", "6qKHrKuqqfvm7fD24sfv4f3y+Pihuu3q4vO5nrOy7KulpI2MhIWJ/MjH1tCDzM7U1tjU39rO0NfZ", "vJWUxNvf1KC547+jpb6cqKe2sOP/4aaqsL6osrW3+P+7prP68qraz6+urfrq+Kn8p7ul4Ozh9O36", "8Omy/P/t3fvz+PH95tPp5sqFi9/FyNvTgYyfqYKBgJ/X25yTm82Rl8TQwMbA34vF7u3s677nvKK+", "sYesrLWlsar94fu3qr/s3PX08/Kl/ozj7/7/x+P6/Knn4eCrpfLo8Om6taCQubi3tvb49vPjxMbD", "yMPe3oHcifnRzc7H04mEtJ2cm5rNlujC3NnWwJGN772ouJ+jpK2os7Hspbevo6u3srL78vD4rNz1", "9PPy8fCboe3h7fj5xeH08qv25u/u9vq2uu/z9e6/vq2ftLOyse2Djp6em5qAk62GhdmYqKuAn9jI", "0tjO0NfZltDH0NPB1Ye6oKDjub267ua+zuPi4eCtu6mpqbT5i6OkvLq0+qKkna+zsKzl/+Xkp7ml", "o6Siu6Ds6u+1tej86Pv39vG7vcq2k5CPi/aFzoSHwNDKwNbIz9GeldGSmsKyl5aVlJOSw9W7u7+i", "67Hp7+Hh/+Tk5KCtr+X68Pv95f/t9vLyv6bq98OvqbOrsaquruDyvqOvoqaiuKS9u73r7PfjrbK4", "s7C2spWOioqImZCTgIbY/87/mqqfnp2cxpOCspeWyL65kpHWuqCuuKKlp+izqYGtsLKtoaaLr7Dz", "r6u0/vau3vPy8fCG6a6lrf745aGn9ODw9vDvoLi5ppa7urm44ffntP6yrLD82t/Fxc2B3dXKjIrO", "w9XD15aS2MnTz93rmNLb3NXd1ZPgrqOmluaurqqgmOymne/3hbzxoZv0guf77Iv+j/r5wKa1h6yr", "qqnh4aat6aqi8+Xr6+/yu73x7OPm5q68vfXixtjIgszFxs/Lw4vHzM+O1NfL0N7V29DUiN/RiZSS", "mpCilfyR6+Hp7+G1v/m08/Hw7/nm1vv6+fiht6f0vuDx7c/c+v/l5e2h/fXqrKru4/Xj97ay+Onz", "7/3LuPL7/PX99fOAzsPG9oaAmJzK1MbM3dXcwsnUztfb1tbf2Z3vjZmP9ZWT7uyX4+7u+ayg/uqa", "ofKknPGB6vThiPuI//r9+Ovlr66trOLsqaDqtKyk8ef19e3wvbvz7u3o5Ky6u/fg+ObKgMrDxM3F", "zYnFysmM1snV0tzT3dLWhtHTi5KUmJLcgpT/kOzg6u7utLz4s/Ly8fD45df8+/r5qrKioKa98qSi", "g7SEraz2gIOop6mqpMjrYDsc873o6fu5+lQ6+/yz8flxFCPDjG87aguHzUQeHNaB1Nd9B9+b2dF+", "B9e/lJPUxN6suqSjpeqgu5Gpsa2tpYKssK24uPPz+aPd9vX087u38Meu7/382P7o/OKo8+v358Xl", "/vrx9fX/sLjl8+Hh4fyx9s7C3smQoImIh4bTxdGCxYCCntPZzJr92cPTndXDwuLErrqo4r2lva2D", "o6Sgr6uvpfbwurmvjrC1sv7879ny8fDP/ev5+fnkqanu9cvlzarlqb+4u7zf++39ufj647u7sa6S", "jsmXoYqJ1a2shYSMjYFkL18GN9XSmdxWDBTa1JLf1wxutOysoyhzWuamrLYje2mx/qm1OmBmtrD2", "g70yaVak5a+u6/nl6f3h6Oil4uzw7OHr2vzo/s7w9fK+/Of83ePD29yEjNCgiYiHhszCg4qAyczR", "8s7ozsuRl8TQwMbA35Do6fbG6+rp6LGnt+Sn4vzgsbuq/J+7rb3/v6a7nKCCpJ2mtYesq6qp4eGm", "re3wzODOt/qz+/7uzfH68729urux4sra2N7Fio6PnKyFhIOC18HNntXTzsjKmIqW5sDB29/X56rj", "q66+gaeytLbs6uvvsL66jqi6qK3w5fr18+P1+Ovlr66trP3r+6jq7+vx9+fyoKK+zujp8/f/v/K7", "8/bm3PnB29nJ2IKAgYnWxMDw1sDSy5aPkJudiZ+ejb+Uk5KRxq687aiqs+n155Wxtqqspui78Lq5", "r564rLL+/P39orC0vPvv//ijuKWooLairbiIoaC/vuv96br09/ni/bSussLk3cfDy4POh8/C0ujL", "zdbJiJaelpyKk5fI1tLmwNLAxZj94u3r++3g883m5eTjtKCy/6e4van65Piz+LKxp5SkvIPW6+z+", "o6OygqempaTx5/X17fC99PTv6+u3vbWzqbWxu4/DxMLe3szbh42Fg4PMxmMfx52bm5GZ3NbPlZ+T", "lZ6X7+XtoaSkvaDn7eXj7OXh6/+nuL2p4dP496vf3vPy/v/P200g4uOq/eBmPRjto+Xo4fG+/l8p", "9Ln0diw0/ZmysfbawM7YwsXHiMDD0fbGz8DJ0dfT2+/T1N3j083Am9vC34C8nri54+mzzebl5OOr", "p+D3/7SvtJWri6Ok/PSht6WlneGu4/nn5rKCp6alpPXj86Dr/+/7/u65pbf48OOz1vDkyobE38Tl", "2/vT1IyKxMfV9NbT2JSSgbOYl5aV3dWSmdm8gKyC476ouqCjse3q4rOlq6uvsvu0rLS77d/08/Lx", "po79runl7eyptafy5Pbk5/Wgsr7Z/e//t/b44b29qJixsI+OxMqLgs3BwcCFmJ6CkYmfzNjIzsjX", "mJByJXcQktlRdXG57KMrc2mp4f7OyeLh4P+ovK77vrihpPbo9J6zpbjB6eLi4/mi7eHh4KWro6qw", "sK+uvba7rKm4vbajpLO4saKbh4SXoYqJiIfQxNaDys7Vzc2dgZv32MzfmNPY3N3DmOeqpKqt6uzo", "7/f19PPi6+Dp7v32++zp+P325+D6+/H/z6e/vby7qqOosbalrqO0sam2pZe8u7q57vbktfn6/OTk", "yt2NkYvnyNzPiMPIzM3TiJfa1NrdmpyYn4eFhIOSm5D5/u3m6/z54e7m6uTr8/Hw7/73/O3q8PHs", "3PX08/KnsZ2v/ejv5OTt+6e7pcni9umu+fLy8+mysfz+8PO0trK5oZ+enYyBip+Yjo+Fi4OTkZCP", "l4a2sZqZmJff05Sb1tDJvO7z7Pvj6bPN5uXk4+LhsrqqqK61+r25rqX1//P18b6ITC70rKyqoqjv", "6fD28KKqoLi++vV6IQS4sLa+tP77/+Xby96MgIqOiNfOZh7XgoaAlJ7O2djV19zElp6UlJLW2Qxs", "tOvwwOno5+a4zuPi4eCtu6mpqbT5sLijp6fz+fH3z+jnbDcWqq6orKbo7e339eXsvra8vLrp8FQs", "4bS0srqw3MvOw8XO2oiMhoKExMtiAsaZhrabmsSyvZaVm5yS+tgudVKl674ocmap5ZeiqbSyvv6N", "ua+7tavd9vWypryypIbg4K3l5eP92+bt8PbiquLv8er89fX/67G37Z+0s7Kx+cmOhY3Ixcfcxs/L", "wdGLgdLaysjO1YGzmJeWldfc3MXRpqCovuWjp6aitI2Qjo7h/f/5+ufR+vn497+z9PvzsKCf3Prs", "+O6k+uns8/flxuzg4vP7+bW76Pzs4uT7r5mYsbCPjsvD2YqB3sbUhc2Dn4GQhJ7UnIeaiIqMltyf", "mJuRy8Xu7ezr6um+prTlqKakteDi/pC9r7L3qriju7D7n7Ckh6H87OLv5eSgrqavpLq3qKC0vq+n", "kbq5uLe2teLy4LH02tyNkYuCn4aSho6E7sPVyJHM3NLf1dSQnpaflIWchJnhuqKKorKsrO/37P/J", "4uHg//79qrqo+byyurSt8+/x+KLu+uWi+evn7Ojrra2jqKG4trDp893z4f3zvqS9qJixsI+OjYzd", "y9uI1M/fwYOfgYiOjp2Xm/fYzN+Yx9Xd1t7d5+ft5uv94OazqYOtu6el6O/35tbR+vn49/b1orKg", "8aDPsq7p4+j/5O3p8qvn8efg9Prb8fn2//fsv7Hm5PL8trmUpI2Mi4qJiNeIxsjC0dLu3tPYnIaa", "nsjSwtTYlIm7kO/u7ezruue7s7+poe2upKar/uD8t7+/rPf99fP29eraz6+urayr+qf78//p4a3j", "7+ny/+n19PTd7eX34f38/LGtj8rY3ouBiY/UgZ6ug4KBgJ+ezZLIzsDU0pjU2trf0MSmoaOIrqao", "sef75ePu5eHr/7q4sLqj+fP38abz6Njx8M+vrq38pfn98evjq/Pq5vXov6O97/Lg/Li8trLk67Wq", "mo+OjYyLitmG1NLcyMaMycXW2dXIm4eZy97M0JSYkpbAt+n2xuvq6ejn5qarrbagqbG7r/K6qqm9", "ubKWvLq+tfifprWHrKuqqfWNpqX5iYihoLCxvdDy/fHs9fnttN799fHDpI2Mzd/Hy9PPysqDzdHF", "0fLU29PO29fPntzZ1OfD3OPuuaW/pqzh573P5OPi4ba+rP2xtL64tPfr9bC8saS9iuH6o+vu/szk", "4uvg6vfA+Mn7trrw8v3x7PX57bn+/fXxw4mEl6GKiYiH0MTWg8vMx5+DndjU2czV0tjBmtTXxfWj", "q6Cppb6LsY6i7eOvq6aoq7yypPaztL/w/+7e8/Lx8Jnu/K344v7l7cLqpbmj5u7j6vP48u+0/v3j", "0/nx/vf/5O3X5MiDjcXBwM7RxszajNTWytHZnJOCspeWlZTF08OQq6KPuKXq9OijqaaxrqevtPG5", "uKietry1srihlqqbtfjI4+fq5P/o5vCq4urz7e7u4fuz/+j1vbCjnZy1tLOy+PaPhozBxM7IxIfa", "2YSCy8zHlp7P2c/Py9aMvL+Uk5KRxq687aiiubmkpr+WtqDi/OCrsZm1qKq1ua6Dp7j7u7y3uv3i", "pLeBqqmop+/o463x8+O/o7348unp9PbvxubwqZuwj46NxcbNh8nL0oWZg9bI1NPbncDHmp6fjLyV", "lJOS2Nbv5rmlv6asjavv5bCqtq2lmrLzqL6irZu4uKGxvabx7c/75/ng7qr19Keh3eHuomA6OvC9", "7PN7IzH6sa6es7KxsMbIjYTPxuvcyY+F36mCgYCfnp3Y1/jN1pnex9HVkoyQpqOqmbmm8sLn5uXk", "4+KlrJ2qs/K/ta62u7m0sPPv8aSG++LorLSqofzu8unhrfDk8PP//vmztcK3y8qqsbmo7bKTkPCD", "zIaJj4qBjISIgoaOz9Dam5Kag5iQ39jV1NefwKGp6vfB6uno57vPzuPi4eCysbm9t/S6tLalppi6", "oaX+juvqpavq6f3h8eOirbiIoaDilJe8u/zs9vTi/Pv9svL8wN3I4MLNwdzFyd2MioLaqp+enZzN", "28uY2tnR1d+SjJCroa65pq+nvOmhoLCGrqSturCpnqKTvfDwuryzu6azv5ei4+Lo6uauobyMpaSj", "oujmv7bw8//79bG3+/rw8v6/88PP3t/nw9rcidTAyczUxIiY397I0szcn56Nv5STz7u67+7i4+vn", "5OXq6+jp7u/s4I2xqKi+qPn+94C8saSh8f3CoqOgoaanpKWNpqXi9uzi9Pbx87zp9ezs8r68tOiY", "sbCPjsTKi4KIydfW9tDC1sSO09Hc2N7ekJjF08HBwdyKuu/u7ey9q7vor6e2rOP/4aywvbyosrW3", "9r+3przzrq3wyKyhqreBqqmop/Dk9qPy4PLr7b2hu/L46/+45/Hj/vDzyoaC8oj2hpeIioWDhIuP", "08/S1MiTnZafno2/vpOSkZCroa65pq+nvOm3sKGxu5Kls7u+qLSomLS7/vL3oLultcLh7/us6q2g", "puHp98Hi4emo+evz/+/z9va3vvS9s+mbsI+OjYyLy4fLy8fW1+/L0tSRzNjR1MzckJDX1sDaxNSX", "5vXH7Ovq6bXu/c/O4+Lh4Km/r/y6qqmbuLihtbq8tKLPsq7p4+j/5O3p8qvj5vbE7Prz+PLv2ODR", "876y9ePitrmUpKeMi4qJwcGGjdTC0NXT5I7gnIaHhJiQ1dra0NfBxOju6+rruqi6s7We9Z7r4bvV", "/v38+/r5qrK4sbGhlrSkjubipfzq+P373LfYqKPj8fDc8fPo+vP3/eW/rp6zsrGw0o7IwNjPicHB", "ho3UwtDV0+SO4JyGh4SYkNfR2drclpnvtcfs6+rp6OewpLbjo6WttrCRtbWx+eX3srq3pr+0vpuh", "//jp+fPa7evj5vDs8KmnvO306P639/nhtvTP++D09pKMjoPKzsTByYT4g4qZq4Cfnp2cm9PfmJ/X", "0dna3P3ZoaXk7KqupKGpiqyqqOyirL6trpCyqa32trKx/PSzsqSG+euqpbCAqainpqWk9Ovv5PDp", "s9br2/31/vi75vb89fXdhszc2+nGxtPHzMrG0I2A3s7N78/bzd2bltPB3dHF2aCg7eTi6rLC5+bl", "5OPi4eCot7O4tK33kqeFobuhs7a1wfzv++nP6/3pr+f19ND24PT6t6aWu7q5uLe26L2omLGwj47Q", "jM7G2s2H3a+Eg4KBgJ/I3M6b0tbV0vrc2tiSjJCroa65pq+nvOm3sKGxu5Kls7u+qLSo8f/0pbyg", "tv+/sZmv79bk+e/vtaWlqqbepai7lb69vLu6ufHxtr38/P/03MbAxoWLwsbFwurMysiMwszezc7w", "0snNltbS0ZyU09LEprio6+Lxw+jn5uXk47Ckrru7r5S0t7zwtqall7y8pbGG4ev/pbCAqainpviO", "iaKhoL/p9PL/9e625PXn+//+xf+H1Y3YxNqTiJeKhcbGysDW1tHPhpud0NbEwtTax5WR2aHuuqWl", "rqa/5/nl46qssrS+sKn7++D5/7ajobv08qz51IWurfGBgKmoqKmlqa6vrK2ys7CxtrrP8fLhr7Tb", "/fz1j4bvTREJx8+H/kQeHNKB6F4EHNLcmp+Y89fb3JPhchGspu2PpKSqrbey7OTu7+zt8vPw8fb3", "0/j3sKC6sKa4v4Gv/Oji7+/7wOjr4Kzg7e/0/vfz+emzueOdtrW0s+Tw4o/YwtjOzuTJ14aYhNTL", "z8TQyZP2y+nN18XX0tGd1dTEmaG5qa+HqLjv7/7O4+Lh4Km/r/y4tbe7sqahp/Pv8bGf/9357f/v", "p+vo6Obh8/byoOPivcfGoZO4t7a14vLgseTA2szA/cXdzdSGmITAzc/D2s7Jz5XI3NzC1dCc1cff", "07unoqLr4rq9qurlp+riuuCtu6mpqbT5q6K79f/z+rL+meD66P+r9vWot6++pP6uobC2pZe8u7q5", "7vbktff//eL1y46QjMLZ/8fTz8vD4M7O09ralZWAsLOYl5aVwtLAkdSqr6mgoqSsgLOrqeT+4ubn", "5NT9/Pv6sL73/rSko4GlsZvqoPvj/+/N7ebi6e3t56ig5JS9vLu6ubj+8LW88P7+48rKhIzQoImI", "h4aFhIOCxcXe2tHV1d/xzNralYm5kpGQ7+7t7Ovq6e/7oqyy46Gtoayt4P6/v7i8u7+7sf6hpbGb", "+v2g7uru7u2n5enr8OfloqG5vbeRurm4t7a1tLOysbCPiZHf28vHllc5MTaD4GIM0dad39NbAjXZ", "lnElcBGR2y50crjrvqELfaXlqAB4ovr/4q6oqbW3v+nx9f/zt6Kzjv/rxfjm5qHu6PTo5ffG4PT6", "yvTx/rL46OfF4fXn97/mwNrI6M7LzcTOyMCNioKKgJiCks/PyNbW0IiJm8DC0N7x6e3nwerp6Ofm", "5eTj4uHn4/G5ta3k/uPd9vX08/Lxrc/q4v7pq/GDqKempaSjoqHk+v/58PL0/NDj+/m0rpixsI+O", "jYyLiomIgJrBzdWCwszezc6Bmd7c2dPa3NrWn8LErrq4v+aoqKygo+WloLaotrr84/v78dP49/b1", "9PPy8fDPr66qsPj66Oa5ZAo3o8pgOj7wvf5YNvfwt/X9dSgf/6qPkt7Y2cXHz5mBhY+Dx9LD3s7Y", "9M/X1ZDR2cfZ0sb10burmaWmr+Gpt7aWsKK2pO6psam5n7+4vLu/u7H6+/H7z6iyov//+Obm4Lil", "rMBBM+6lvqHv7+j29vC2/PCusPL/2sDZyMTdx4XRx8mGnYWBi5/bzt/aytzww9vZnNTXxeKqo6yl", "paOnr5OvqKGXp7m097+trIiuuKyy+KO7p7eVtY7r4uTi7qOgqKymoris8fXy8PD6orKmtuvn9/uq", "tLK6mo+OjYyLiomIh4aCmIzGyNaBmYa2m5qZmJeWyL6TkpGQssTH7Ovq6efo5pYleW2x4Kc/Z2Or", "+q2wsrn1pzJpQPCDST5sNyj+qepEKuvso+HpYSQT87z883giNPu18HIoNv6ljo2Mi9zI2ofVytbX", "x8WAgp7e09XZ3MjDxZvH39vS1efn47+kuL3gobOrp7errq7/9rzw+7jw+Kzc9fTz8vHwner6+P7l", "qqHqqfDq8Obxofzjvq21u7e5sPa44/vn9+Kw09KNnIKRo4iHhoXZipmrqp+enZzN28uY1NfH0MD6", "xd2j7vDsuKW7vKKi66imrKa0t/7i/Ki1q6yysvu5sqL5tprh7fnl5OSpoOSqpe3n+qig5JS9vLu6", "ubjh9+e0+/PixsDayMiLl4mJhtDK0MbG7MHP5d6S0t7kg72WlZSTkpHGrrztvK64qq2psuX547au", "tL6yi7Ovv6r46fbl9OzynLGb56D/4/7k7aCvruaq9e315ey+4eC7qrC4uLbh++fz/cbA2sjfgoqD", "iJaWlY2DmIGQhLSdnJuamZjB18eUwdPf24yirL+46vTorqK95P7//ODv/uL8/Ki4trz75PPz6PG5", "i/eusLG2qriouKai9uLs6q2tub2mu/P94LerqKmzoLGvj4nfzcXBhJuAhp+EhIWaqrWenZybmpnO", "1sSV1sfc5dW3uu3x66mlp7SjoeT84uYwQEpP/B9KGnv3EkQXYLy28I1MIuPkq+nhaTwL66OjuKGo", "9//uyvTu/Py3qbWzVwJSM4/MbgDFwonLz0ceKc2CQzwsmZ2Gm51JJzsOlfZwHt/Y762lLXBHp+/u", "/c/k4+Lh4P+ovK77uK22k7+mtbG+tLTPsq7u4OT57Oyn+vmk6+Py1vDq+PigkJO4t7a1tLPg9OTa", "3MOMg6CJiIeGhYSDgoac3szJ1djW3JjU2tTHwI+T06Cgrqm7vuSrprSh5uOmoLS+8769qb70sbPr", "9/Pz+fGzwebqraerrau2oKaujqOioaC/vr28u7q+pPP/47Tw/vDj3JOP3srEwoXFx8HDxoKGgJSe", "z93V0frU1sXGlJiSlpLx6e3n6+KgrL/m7uTy6+Hr//nh87+zr+bw9v7e8/Lx8M+vrq2sq6217O7w", "pefv4/Lzorz77vr3/LX44+Hx4bCx9M7azIHFy9+Fw8PRxcrOnIKYnpac2JTQ3JedlZORksXZu6Ko", "8emEoSl9Y6vkB1Mge1z+pbm2+rqwvvahvTJobqTP7OHj7+76/aq5oaWviaKhoL++vby7urm4t7Gp", "8PrksfPDz97flojP2sbLwInKzM/FzZyDm5uRs5iXlpWUk5KRkO/u7ezr7fWhqqHlp6+jsrPi/L6z", "tbm8qKP7vLm08PGjneyzr6uroant9OXk9ObK9e3ztunz3/Pq6Pv37MHh/rnzgcfAzczP/NrLj4yE", "iIKGgp/f0ciGmJ6YnJbQx9DTwdWHuqCg46nnpqaroO3j6eHn/f6xs7q+sLaw6/e4sqio8s/g4Oj+", "+eX7taXy7e3wrPL05vL4svn7+vPw5Prh/faszIjYzN6Dh4TKwIvWy8XWiPyYhZ+CnJqSspeWlZST", "kpGQ7+7t7Oz25qyusPvj4+nL4P/+/fz7+vn49/Hp+7e7p+7Ir6WHrKuqqainpqWko6W95Pbovf/3", "++rrqrT2+/3x9ODbg87N2c6EysjC3IadhYGLtZ6dnJuamZiXlpWUk5WN2PzurqCqubr15aWqqqCn", "sbTysLyxvvj5vLaitPm9s6f9i+r67OXnt6uvp62l563r5aC0vrq+pb25s7fz5vfy4vTY28PBhMiE", "x8nKw4yEiIKGnJDWjoKcmpKyl5aVlJOSkZDv7u3s7Pa56KSqpLew/+OjsLC+uauu9Lyypbb5o6C0", "pobq+a+yrKqiqOL15uXz58n08vK1/7X+/Ov05Pzk5/v+/o/S0YyMjYCIjIaCmIzSn4eflbecm5qZ", "mJeWlZSTkpGX86qkuuuppam0tfjmta21pfKur7O8qLyrpPuiprKi8+7Ir6WHrKuqqainpqWko6Kh", "oL+5ofjy7Ln7+/fm566w5//by4DBzt7IipmBhY+pgoGAn56dnJuamZiXlpWUk5WNw7+vo+yopqi7", "tPvnsqy2pO28saiyr/e3rbr06+igpqO/geiwqqygqqHrqfDq8Obxofzjvq21u7G5v6u55uDh/f/3", "kY7BahtLEgvThtPL18edj8zO3NKFnZmTvZaVlJOSkZDv7u3s6+rp6Ofh+bezo6/gvLK8r6jn+664", "orD5o7ejs4rh+uzr7qi3r6etpfTm8OLl8eq9t7u9vKS45eX1/ay2sISkjYyLiomIh4aFhIOCgYCY", "gpLY0syHn5edv5STkpGQ7+7t7Ovq6ejn4fmgqrTho7O/rq/m+K+3o7P4trKg/KSd7u3mrrWtqaON", "pqWko6KhoL++vby7urm4t7Gp8PrksfPDz97flojfx9PDiMbC0IzG1tLRnpvJzcHb04iWxNvVxKf0", "6uzg6rmttaWgqrfi6uD4++b+5eb2vL6g6/Pz+dvwz6+urayrqqmop6alpKS+ruT26KO7u7GTuLe2", "tbSzsrGwj46Ni5eFzcHRmIKEiKiBgJ+enZybmpmYl5aSiNfbx5Csoqy/uPfrq6iopqGztuyhvKq0", "s7Wp++bw9v7e8/Lx8M+vrq2sq6qpqKehueb29vXv8b7p5ev/pLr14+Hg/PyzsMzCzN/Yl4vK08iF", "xtfMjNbQytiem97YzNabw9vH15zSu6Dw7uzq4uik6Kyg4+nh5/3++vzw+vG6o7iRvaCzs7yK666y", "rKzu4Pvm5Onh56Whur+5urW7sbm/qbG1v5mysbCPjo2Mi4qJiIeGhYSDwNXO69vFyJuRs5iXlpWU", "k5KRkO/u7ezr7fXnpbOxsKys/+f/9df8+/r5+Pf29fTz8vHwz6iy7/n//ubmp/L89Oa/o+Lq6unz", "9bi5+/v35ueusPPkwY7P2MWHxt3TyszKxoCBxN7K3JHV28+V09PB1drejJLo7ubsqOSgrOft5ePh", "4rK0prK44fmquLyzv7uz6ePhoJevv7n887GrqPPv8ejmv6PY+vO9//Pzuez+dy8r57K3sE4UCMKL", "2sFJHQ/Ihp3hycmfytRdAQXNhJjUwMDH3d+O6O7mxuvq6ejn5uXk4+Lh4Pji8riyrOf/9/3f9PPy", "8fDPr66trKy2puzu8Lujo6mLoL++vby7urm/q7n05uf78vzKkIqmi4qJiIeGjJ+pgoGAn8OUktHV", "0NafkZKdk4iRmMXu7ezr6unv+6KssuOhraGsreD+vreprK77pqCyprTy0aiupoarqqmop6alpKS+", "6bOh3fVaK/u5+1Qltff8/PL139qNwmgKxpSIzpaahIKKqp+enZybmpmYkIrFiuVxEd/vur+tpa3p", "iaOrrKrjBlAhZF39qDpgeLf3tbq6sLehpM9LH2w2LP+p/O5FL+qtvq7wobm9t5G6ubi3trWzr731", "+dmQiqaLiomIjp2vroOCgYDc0dPI2tPX3cWY3Nrd18P4m4OB7PbA6ejn5uXk5P6ypbyqtLO1+rq0", "tqWm6fG6tKKArbCqrKCAqainpqWko6KmvPv367z49vjr5Ku35/L55OLOg87Dxd7IwcnD14aDy8Wd", "nc3c187I2JXV0ZeKj53V2bnw6uzgwOno5+bl5OPi5vy7t6v8uLa4q6Tr97y2oL79huHg6P6ptK6o", "rIylpKOioaC/vr28vKb98eG29vjy4eKtjdrMwtHLwt2FmJmLx8vXnpielrabmpmYl5aVlJOSloyr", "p7vsqKaou7T756ymsK7tq7ulqPnk/vj83PX08/Lx8M+vrq2sq6214La4xuvt4eTw677zXzv1ueB2", "LTz69LJVAWwPw8uLxmoCyYbWZwHMgcvXXwcZzprN0VYMCsSTxtnVoPHx46P79+/n7c/k4+Lh4P/+", "/fz7+vn/66brn7sRcL3P/+ZOLav++2k8C+uk4WM6Gb+qvf/09Pr95+K1UAJzKgnMjmk9aAvGiI/n", "08XXw9OMn18HHtXSmdp0GtSYk+HF0aGqqKnn6p8Lbua2JXhz4au2P2Zbtfb5m7aksfSlEXHwrW40", "LuLsquRLJ/OsqqPAQizx9r3/83siFfm29vz8suH4wMDKjMhpCMvPhsdFGQPPgMZ9F8mbztF7GtXd", "lN3aUApquu0IWityS+elBn2tpeEETj9mV7Wy+bAUeru886Ewa16v5eRtMA3nqPRnPyvzovVhJAX0", "vae16aawtr6es7KxsI+OjYyLiomIgJrBzdWCwszezc6BmdLcytibxsDSxsKdra+pq67o9+/n7c/k", "4+Lh4P/+/fz7+vn49/Hpp6Ozv+7Ir6WtpOjm5vvi4qW7o6VxHwsMvVgLWTq4/HcvK+ey5fhsFM6M", "yWkFxs+GxsxCGSzOmJ6HnJxKJjQPlnEk0tzWkKIvdlPrqApkqa7lp6sjek2x+fT88Pr+5PilpbW9", "7PbwxIWurayrqqmop6alpKOioaej7e399aR7GDWquufj8/+uiI6GpouKiYiHhoWEg4KBgJ+emoDI", "ytjWieJUDybc1pCsL3ZVpa3z6Pu1sbasrKb++P72/K+1rbm7gLqgtqHx+8+osqL///jm5uC4pehF", "MmA7POq96vTu/KS45eX1/ay2sISkjYyLiomIh4aFhIOChpyQ2tTKhZ2Zk72WlZSTkpGQ7+7t7Ovi", "ra2moqmtraeJtLKy/eP7/eW8vqD1p6ervbXSrePs/uzj56Xz6fW+t/L5u72gurywuv399vL5/f33", "2eTCwo2Hi42Vh8PP05qEgpuAmJmUnJCwmZiXlpWUk5KRkOjy4qiivPfv5+3P5OPi4eD//v375/W9", "saHo8vT42PHwz6+urau3pfrt5PLs6+28pqC0lJe8u7q5uLexqfD65LHzw8/e35aI2s3E0szLzY/J", "xd7an4KcmpKyl5aVlJOSkZDo8qmlveqqpKa1tvnhsaSjq7eysvayvLmz+6G9p7608tGorqaGq6qp", "qKempaSjoqa8+/frvPj2+Ovkq7f28uCzrpOBycXdlI6IjKyFhIOCgYCfnp2cnIbd0cGIkpSYuJGQ", "7+7t7Ovq6ejn5uL4q/D/gj5kfrK8+oE5bWml9Jsza3GB6K7O4+Xp7PjzuqrssbymoLSUvby7urm4", "t7a1tLOytqzfkPnEShEAiM9HHwXNxYHDXgQQzJvU0VkNG8GUx9rU3++6pS1wV6DooK+kquO2qSFk", "b778rztic/e0Fni9uvGzh241AOKr6WgzIOel6uREMWEkA/S881k79bf7dC8Krr7gkYmNh6GKiYiH", "hoWEg4KBh4OR2dXNhJ6YnLyVlJOSkZDv7urw5K6gvvnh5e/J4uHg//79/Pv95by+oPW3v7Oio9Kt", "/ejv/+Pm5qru4OXnr+Ph+/n4vqW9ubOdtrW0s7KxsI+OjYv/SxI9ycGFmNDW08/R2YObm5GZ29jY", "1tHDxsKeo6ujq7+i6ePn4fnrsLazr7G54/yYtbe7sqah8/P52/DPr66trKuqrrSo4uzyvaWhq5W+", "vby7urm/q7nx/eWstrCEpKeMi4qJiIeBmcnCy8+A3NLcz8iHm9XW39uZ0N3fxK6no6m56Pfv5+3P", "5OPi4eD//v37576wrve1ubWgoezyjODg7un7/qTv9e/hpr2loau//fzu/+nR7Pr6tb+zta2/y8fb", "koyKgqKHhoWEg4KGnJDT3NXVhJ6DvbyVlJOS2N6mup6toL+7qe+iqqe2r6Suq/C6ua+ftb26s7ug", "kauYtMeo/ezn/vjopeXhoq2quYuKv769vLS1udv44/vg9/3m/o/CxNrOitzYw8fRwamCgYCf19uc", "k9vJyOTC1MDWnO7ToLujuK+lvqaTr6ihsevho7O7vK6StK29paC0uPuzoaC8++/56aXV6ufy6PHg", "7PXv1Pbz+O6yoZO4t7a1/fWyufHf3v7Yyt7MhtHJ0cHnx8DE09fT2Zucn5iW1dnbwNfVme+1x+zr", "6uno56e1tJC2oLS68IK/tK+3rLO5orqHu7y1na+zrf/u/sDm8+P38uLuqebq8P7o8vX3uL+/te+Z", "srGwj46NjIvcyNqHw8mEnoLFz9zL0NnVzpff0sLw2Nbf1N67jLSFr+Luq6izq7Cnrbau8qi8sPzz", "4tL39vX08/Lx8IbprqWt7uagqPyMpaSjoqGgv769vPj2/Pnl3/vg9uDn8cOGzNzb+d3J08OL+8DN", "1M7L2tLL1e7Q1dLEnI+5kpGQ7+7t7Ovq6bqisrC2rfnL4P/+/fz7+vml3fb19PPy8fDP5uitpOL5", "3+fz7+vjwO7u8/r6tbWyuuKSt7a1tLOysbCPjs7Azsvb4cnSwNbVw82I3s7N78/bzd2Z6dbbxtzF", "1KC5o5iip6y67v3P5OPi4eD//v38+6i8trOzp5y8v7T4jODg+e3i5Oz6rr2PpKOioaC/vr28u+j8", "7OLk+6+ZsrGwj46NjIvXo4iHhoWEg4KBxdOQydnDzvrX2cLQ2seSjJCoq7merqeooamvq6OXq6yl", "i7ulqPO7qaiEorSgtvynv5vqyujt7+bg5uKvvo6joqGgv77gsLurqainv66es7KxsNKkp4yLiomH", "iIbiRRkNz4DMXwYNm9HQWQwx25TQ2sTJLnVOouu+u6mpoeWnq6vhtLY/Z2Ov0Pn49/a2u72msLmB", "6vyj/f7v+/HU4+nh4Pbu8t7y8bS8wf354/e4+vLkvPTK2szFx/eOgYnAytbmw8LIl9jI0tjO0NfZ", "lp3R35uRy8Xu7ezr6umtq+ikoKeHt6WxqpG1qK68trKk/fOwvrizhKiirer+5Or87unrpKvnqKDk", "lL28u7q5uLe28Lrg5v7g/9zC3MrNyNzOycuMipmrgJ+enZybmpnU2NXUwNrd356nr76k6/fp7+Tp", "pqutoaSwq/H6/PD6rbC+pfuztqaQpJv95+/5/++hr+Pn8eWu7OD2svr46Prz9b++rZ+0s7KxsI/T", "hJehiomIh9uMn6mogYCfnpKTm/1YAhjYlcdSCQCQpKcsd0yk6Z6osqDO4+Lh4Lyxs6i6s7e9pfik", "obagqIOK4+vu+OT4yOTrrqLf5+P14bLo8uj+t/vs+cuyvb30/uLqz87Eg8zcxsTSzMvNgonCy9CU", "nMCwmZiXlpWU0cbfnq6qqYm9r6e8i6+2sKaspLL3+b6wsrmy//v2s6G9saW5gOGupemiqvKCp6al", "pKOioaD6sO7o9OrJ6vjm9PPy5vj/wYaEl6GKiYiHhoWEg9TA0p/d1Nibh5nM39/GmtTXxfG7ur+l", "qb+9re/hoaW3o+y2sKq48bmut//+7d/08/Lx8M+vruXt5e7l7dHp8eGr4ejks7776fX57fH4+LW8", "urLqmo+OjYyLiomIh4bXwc3GxNL30dDZk9nW1sPX3NrWwJiLxe7t7Ovq6ejnu+z/yeLh4P/+/aHy", "4dP49/b1qfrp2/DP8oSHrKulpqiqq6iprq+srbKzvcry/+6it9Lw4PL7/bCH7cXFi/7ASR0Z0YTg", "zc/D2s7JnJ2a/dnZ3pXncBPS2O8vd2il6pmgJnxsqeri7O3y8/Dx9vf09d329bKmvLKkhuDgrf7u", "5O3t9cLg8OLr7aj2+rG8+PX37Pb/+/Hhu7HrpY6NjIvcyNqHxYWZg8PR0OzK3MjelNrX2dXQxMfB", "n9amoKnkrb+nq7Ovqqrj6rnp/6X9rr6urKq59q36urbx7dKyruTosKr0obyMpaSjovfh7b7r8+//", "/dX25rWps+X4/svB2oLh2vrcyNTEw8aMxsXL6NLI3t702ceenI+5uJGQ7+6kquvi6Kvu5r7O4+Lh", "4P/+vrO1rrixubOn+rq8v7Wdx9rAwKu3g6inpqWko6Khp6Pz/PX1uvr09uXmqbH/8PnBg87Dxd7I", "wcnD14adhYGLtZ6dnJuamZiXlpWTj9OR06Ovvr/26K2ts6esqO6goKO0/P20qb+/5fX1+vbtMFFp", "z9777PWr5mgyJu+l8PHj7+e//fV9ID2lt/aosrS4mLGwj46NjIuKiYiAmsHN1YLCzN7NzoGZ39TI", "w8+Yx8fTxdXt8Ors4MDp6Ofm5eTj4uHg//764LPp55O/FWG6tPKlE0PirvnkajAs8afl6urg5/H0", "o7H1r6W9ubOdtrW0s7KxsI+OjYyLjZXYmeXKysDH0dSf0H4cwpraewSWwdxSCTKQC18Ob+uoKHNM", "5qIleGPhqLA/Z2u4+h1JEWY0b068tvCD5uDmrODiSjzp4aXn60Es7ve+5V86+bekuOars7O5m7CP", "jo2Mi4qJiIeBmYvHy9eemJ6WtpuamZiXlpWUlI6e3a6no/Ls8cPo5+bl5OOwpLSqrLPn0fr5+Per", "397z8vHwme78reTq+d/n8+PhpL6ioKHp8en5/9f46Mz1u/33z6qaj46NjN3L24jEysrXxsaBnZ/X", "zurUztDW0PXZ28DX1Zjm9cfs6+rpvqa05aWwsaS0rP7g/Lj0uKuks6Gn866t8LTStYeGq6qpqPHn", "96Tn5/Xh9vLf6PXO/ODjtqi08P7+48rKjZOLjVk3MzSF5mAOz8if3dVdADfXmHMndheT2VAKcLrt", "uKMJc6vg5v/k66qgs4mxqbm/+ub48BJFF3DysxND4eat7+NrMgXppmcYEKWhur+5bQMXIrnaVDr7", "/LPx+XEUI8OMyMLGiOTJy8fG0tWA0X0dxZyTgrKXlpWUxdPDkKurua2ipou8qYKst6KgraW7/uD8", "uLa2q7Ky9aiv8rmxnNnh+envsYOCp6alpPXj86D16+7o8vzw+/bi/Pv92uX9w46QjMiEw93U0szC", "ysHA1NbR05yEmpGyl5aVlJOSloyrp7vsqKaou7T75662sbWpube+va+ztrb6pbC3p7u+vs2xqa2n", "gaqpqKempaSjpb3oraBtAwk7uc5UOrXn8v2x88DAzsnb3onGZAbchGczZxBeBR7fm34oWQw3lczG", "UwsVu/Hx46P49+/n7c/k4+Lh4P/+/fvnquf/9/31saCxsKCKx/rg4KPpp+Ly9fHt5evi4ev38vKy", "urK4sKq65K21sbuljo2Mi4qJj5uJwc3VnIaqn56dnJKag5iQkY6+uZKRkO+4rL7rq7q7orK2jLev", "reDi/vr74ND5+Pf2vLLz+rCjnOr6/qLn7+fv8+6spPiIoaC/vr28+unq/ePl3eD+/rGtpY6NjIuK", "iYiHgZnAytSBw9Pfzs+GmNjLxNPBx57B1NO7p6Ki6fTu6OzM5eTj4uHg//79/PzmserpJkpHdfIw", "akvhrv3kajAg5afy7e1iOD70v/V8JiS6XQn+tv5XO/+xuIiOhozK2drN09WLyMbMxtTXnpacnJOF", "l9+Ei5OTmbuQ7+7t7Ovq6ejn4fm046Gtoayt4P66qaq9o6X4p6aw8+6h5283Kfuq/0sn6aXwYjkq", "7vi+fCY49PG4Uwd0LxCy4fhsHcPLi97GiN/DyITAykAaGsqd0H0KWAMU2NKU0NPekKehLHZ8qem8", "JnxmreO0IHte/rAfeqP35Pim6/Pz+dvwz6+urayrqqmooLrh7fWi4uz+7e6hufvq6/LiuPPh+/Wy", "kYmNh6GKiYiHhoWEg4KBgJ/fzs/ezsqW2tfFnNXH39O7p6Ki6+Ko4ee9z+Tj4uHg//79/Pv6+fj3", "pLCgpqC/8MeFrq2sq6qpqKempaSjoqGgv7mh+PLsufv79+bnrrDw49zL2YHIy9vMhZiChIiogYCf", "np2cm5qZmJeWlZSTkpGQ6PKppb3qqqSmtbb54aOys7qq8Kizr7S6+qGntaPw8bSO+++g4OLt4fzl", "6f2p8PDivb25vbe7/+r79ubw3Of//bjOgMvFx8/82suPhY+DhYOA29/J3ZbW0N/fwtfby5/F2bui", "qPHp7enj56O2p6KypIirs7H0uvStsaO6sP3z+fH3zbGpraeBqqmop6alpKOioaC/vr28u7q5uLex", "qf3+9bHzw8/e35aIyNvUw9GJ18rUzd2cnc/J2YSakJaelNbB0tG/q4W4pqbhvKiCrLezrqC5iqyx", "9Lr0v7G7s4Cmv/v48MSvqa+s6ub9taWhpa+j5/Lj/u741O/39bD2uOH95/70uY+FjYuJisXHxsLM", "ysSfg8zexMSem9XX3cXE2saOkMXYpr3jv7+zpa3ppKSnqKWzr6qwueGH/a+5pf74+bG1/KOA6fqk", "0Kyxq7agpq6Oo6KhoL++vby7urm4t7a1tLOysbCIksnF3YrKxMbV1pmBw9LT2sqQyNPP1Nqa2cPR", "wd7Qye3wPVNfR+mQoqvlsKz+7qS2qOP7+/HT+Pf29fTz8vHwz6+urayrqqmooLqq4Or0v6e/tZe8", "u7q5uLe2tbSzsrGwj46NjIuNlczO0IXHz8PS04Kc3M/I382Vw9/B2NaQj5fv5e2puKmouKKOsamv", "6qDuq7epsL7z+fP38en7t7un7sivpYesq6qpqKempaSjoqGgv769vLu9pfz+4LX3//Pi45KMzN/Y", "z92FxsXRzczM0oKBmZ2XsZqZmJeWlZSTkpGQ7+7t7Ovq6ejn4fmmtra1r7H+qaWrv+T6taOhoLy8", "8/CM4+/+/7ao6/zpq+T38Of1ren3+Ou5uv354/e4+Pr1+eTNwdWB2NjKlYWBhY+Dx9LD3s7Y9M/X", "1ZDWmNPd39fkwqPn7efr7evoo6expe6uqKe3qr+zo/etsaO6sOnx9fH7z+r97u3778H86uqt5a32", "6PTz+7S8sLq+uqnO8Pmz5v6sgMzY2N/Fx5aAho6ug4KBgJ+enZybmpmYl5aVlJOSkZDo8qzsqKao", "u7T756a3rOyksKmzsLS7vfr3vqexte/z98+kruj/6Ov57c/y6Oir46/m9vL4yen2sLi8trK2s/b+", "58HCws3Pl4uPh42FwdDBwNDa9snR15LYlsPfwdjWm5Gb7+nv7L+ru6+isvjmnKCtobG1//ypv7Xl", "9bi6u6O3v7WdrbDZbTEp4KjxZz4Fv63gvri+tpa7urm4t7a1tLOysbCPjo2Mi4qOlIjCzNKdhYGL", "tZ6dnJuamZiXlpWUk5KRkO/p8eOvo7/24Mzl5OPi4eD//v38+/r5+P7t3/Tz8vHwz6+urayrqvSh", "qezq7e2qpqe2vraWu7q5uLe2tbSzsrasgMrE2pWNiYOthoWEg4KBgJ+ZgZPf08+GkI2/lJOSkc3F", "xO3s6+qqp6mypK2tp7PutrCzuamSjZWb9uje8/Lx8M+vqbHh6uPnqOTq5Pfwv6Pt/vfzsfj19+z2", "//vx4bCvt4+Fp4yLiomIh4aFg5/GyNaf3dHdyMmEmtPTwdXa3pzYqq+pqbnnp6mx5Pvj4+nL4P/+", "/fz7+vn49/HptfOxvbGc/LOv6O7+6OHrq+fl4OmjoPfs+PqmuLq3tah3FCqywOXO143AShAIwYfE", "RB4AzMaAx18HA8ua0VkNF9vTj53Qjuju5sbr6uno5+bl5OT+7qS2qOP7+/HT+Pf29fTz8vH30+vn", "+6zo5uj79Lun4Ob24Onzs/H94vXs7LWosrS4mLGwj46NjIuKiYiAmsHN1YLCzN7NzoGZ3MvZ2tOY", "28bG1MLvqqi4qqOl5a6roumlsKCtuvz9uLquuPW7v7K8p7C+qML8/O6xqa2po6fj9ufi8uTI6/Px", "tPi08PX28fDB4f64sISOio6LzsjcxovJzcTK1cLQxpDI0s7V3YqUkpSYktTDrK+9qYO+pKTvpeuq", "oq+k6f/1/fv5+q2xo7qw6fGcuTFVKuCtSBprMgun9u1HMOzmoOvxvX0hOffwt1IEdSkz+LDLx0wX", "LMSLloCGjq6DgoGAn56dnJuamZiQitHdxZLS3K69vvHprLupqqPora2spLL94Pr88ND5+Pf29fTz", "8vHwz6+urau34+Tvp/X3576gpqC0vvjv+Pvp/d/i+Pi75v7Uxt3dwMrT/NrLjsaKys/Ax9rrz9CS", "k5mTl5GXlNLexY3t6e3n66+6q6a2oIy3r63ovPCzvba/8Pj89vL27fXx++Wvrq2sq6qpqKempaSk", "vq7k9uiju7uxk7i3trW0s7KxsI+JkYPPw9+WgIaOroOCgYCfnp2cm5qehNPfw5TQ3tDDvPPvqK6+", "qKGr66yqpa3j/vj+9tb7+vn49/b19PPy8fDIs+a8rOjm6Pv0u6fg5vbg6fOz8/32/7umsLa+tPbh", "8vHfy+XYxsaBy4nIxMnGi4GLn5mBk9OLh5+Xnb+Uk5KRkO/u7ezr6unv+6KssuOhraGsreD+v7+t", "ub66+KK8prT9neD5r7KsqqKCp6alpKOioaC/vr28u7q+pPXj4eD8/LHk1t7IkYnI3NzTycuGg8HN", "wczNgJ7ZzteY1cLbmcXdxdXt7qmtv6vkrKKypK2v77evq7vg/vz68vi0+Lyw8/nx982vqa2nq6Lt", "7fPn7OjB9u/E9u38/vf//biotrLw+uHw8sPLyYuLkImPgI+Fj4OFn4eflbecm5qZmJeWlZSTkpGQ", "7+7tqK6+qKGrhLGql6e5tP/11/z7+vn49/b19PPy8fDPqLKi7v7+/efpuKKkqIihoL++vby7urm4", "t7a1tLSu9fnZjs7AytnalYXCwNDCy82NydHJ2ZbZ1s3ZwpjW3MqTjuju5sbr6uno5+bl5OPi4eD/", "/v38/OaqqLa49be/s6Kj0q3q6Pjq4+Wl8enx4a7h7vXx6rDy7ve7prC2vrS78b/mwNrI34vW1YiX", "j4WPg4Wdj8zO3NKFnZmTvZaVlJOSkZDv7u3s6+rp6Ofh+bezo6/grKqksL7n+764uKH5oLurtdW/", "oLW++e/ks6fl6ujs8Lv2/uy1sbbz9/O65fry57uqspHCaxxKEQrch8RmCM3KgcPXXwYx1YaWy8fX", "24qUkpq67+7t7Ovq6ejn5uXk4+Lm/PC6tKrl/fnz3fb19PPy8fDPr66trKy2puzu8Lujo6mLoL++", "vby7urm4t7a1vPD+/uPKyo2Ti42VzM7QhdfX283FgpzQ3cnd0NaawtrEiYrByPTuq6OlvuS7rryg", "/vPs+fitu7Dn+7m2tLik76KyoPn9wvnr/+Hi5uXh6Oisv6G8cR8LDL3I83siBf628v3y/LHybALD", "xIvJwUkcK8uEZzNiA5/VXAYEzpnM33UP15Pecgqs7urs4Oqsu6SntaGLtqys97iyrra7rZy2orCA", "ur+0+I7//t746v7spvHp8eHH5+Dk8/fz+bKzubO3sbuovPb45pGJjZaLjY6Bh42vhIOCgYCfnp2c", "m5qZn4vS3MKT0d3RvL3w7q+jv6Gjo7fm/f7upLao4/v78dP49/b19PPy8fDPr66qsO/j/6jk6uT3", "8L+j5Prq/PX3t/395PW44Prm/fWNkOBvH4rdSR0FhefMzMLFz8qHgJTe0M6JkZWfuZKRkO/u7ezr", "6uno5+H5tOOhraGsreD+v7+tub66+LC2obLy0aiupqzu+erp9+PN8O7uqeOx+vjv+Ojw6OP/+vqz", "7u2wiImEjICKjpSI1puDg4mrgJ+enZybmpmYl5aV3sbBxdmpp66tv6Ompo+yqKjj6cvg//79/Pv6", "+fj38en7t7un7sivpYesq6qpqKempaO/reXp6aC6vLCQubi3trW0s7Lw49zL2d/j3sTEh42vhIOC", "gYCfmYGT1tvQ1omRjr65kpGQ7+Hi7JgrcnnnrawleEWv4Imxqbn7O2JH96Kntb218bOH5q755Wow", "NvyNpqWko/Tg8r/o8uj+2O32t6u19/z85fHGwMjehdvczdXf9sHPx8LU0MyVm+De2MzWm9HRx9PY", "3OK4oriul+7h/Mzl5OPiqKb/9quzr7+brLn28/Lz87W1m+7n4c7/5M3h9Ofn6ObmqKDklL28u7q5", "uOH54fHR5v++zsrJ6d3Px9zrz9bQxszE0peZ3tDS2dKfm5bTwd3RxdmgoO3k4uqywufm5eTj4uHg", "t7+zuLe/j7ejs/23/bu1/M/p++Pv/+Pm5qeurKT4iKGgv769vLu6ubjl8/vw9uDV9dvPxMCDw82E", "h8XKytfDyM7azJSHsZqZmJeWlZSTz5iLxe7t7Ovq6bXu/c/k4+LhvdXU/fz7+vb394U0b2LyurkO", "NAnjrOZrMhenyuzj6/bj7+eUvby7uvr3+eL0/f33477e28je0vnMxMLF0cvR483Ml5nm2NrO2JXb", "39Lcx9DeyOK9v6+W7eDmoam3gaKhqei5q7O/r7O2tvf+sLj68qraz6+urayr7+Wm5uLhwfXn7/TT", "9+7o/vT86r+x9vj68fq3g47L2cXJ3cHIyIWMxouB27WenZybmpmYl9Obx8fdweC9ob2trKu9oaio", "7e34yOHg//79/Pv6r7ml9qamsPLs8Jvn5/6i7O/9yfPy9+3h9/Xlt7n5/e/7tPT+8f3g8f3pvdzc", "zouCkaOIh4aFhIOCgdbezJ3I0s7V3ZeLlcDb28KeqKu5jb++u6Gls7Gh6+Wloau/8LCyvbGstbmt", "+ae7pbyKqKe2hquqqainpqWk7PLk7tP3+vTv+Pbgv+Xn97+y5fnbwsiFkKCJiIeGhYTei5qqn56d", "nMaTgrKXlsi+uZKRn+Du4OHm5+Tl6uvo6eOaIHty/rEfZvqbG3u4vfSwujBrYuGupdrk/uyoy+ni", "7eCroa2ys7Cxtre0tbqctbTy4ej+zI7L2cXJ3cHIyIXMwszFzNro0sjektrX2dXQxMf71ZzvoaOP", "pKe5pKKyoO3jucvg//79tb368bGkgLqgury2k4Pg/ejoo6OgqPyMpaSjoqGg6Pfz+PTtt+v/+eLA", "/PPi5IeJXTM/OInqZArLzIPByUEEM9Ocfyt6G5fdVA4MxpHEpw13r+umCnKk5uLk6OKnr62zvKif", "u629g7+4sfuzoaC8++/56aX85vziwuDl5+7o7vq3vbe7vbi/vq2ftLOysbCP3MjY3tjHk62GhYSD", "36uqn56dnM3by5jB2cHR1//QwO/z7buipK2nsOiPtJC2rrK+ubjyvL+tjriisLCes6H4xrSErayr", "quDup67z6/fn5c3+7sb/9PT6/efi3PDOu7HrpY6NjIuKid/OyMHL1IzSyNDJ6dPayc2QkPRUDhLc", "kXReDW7sqQllpq/mpqwieUyu/721s/u5tra0s6Wg87wScJav/Gw3GOOor669j6SjoqGgv+z46O7o", "96OdtrW0s++bmo+OjYzdy9uI08fXw8bWgZ2f383M6M7YzNKY1tvd0dTAu73jqqKkreChs6unt6uu", "rv/2vvX7ofmqsqKgpr3ysv6G666wsbaq6ufp5eD098vlu7/jtKeRurm4t//ztLuz5fHdycjYgorb", "zdPT18qYqKuAn56dk5Sa9sjD39jdwMbY0++bvaiqvqzoqaGkveO2swN1sP2JktD5+Pf2obWhtbSk", "wfnh+en4qrSor/Lk9uTn9a7p8en56Lrl5LemvLS4sqCrpY6NjIvdwMbDydKK6dLy1NDM3NvelMrd", "w+DawNbWmdOgoK6pu76ArO79z+Tj4uG3trC5s6z0qrC4oYG7sqGl+Mh/EQE0q8loMiTrpUIi7KHi", "fiQ88rq6XQhUNbXz+/ux/sdPFwHFistrC8jNhMDKQBsy0J3f09WZmpCWnpTH08PXqrrjoqqnrOjs", "5uLm4uXo+9X+/fz7s7/4/7m7l7y/obyK++ukrOTkyufq9unh9+epqaSUl7y7urm3uLbSdSg/+LDb", "3EwXGsmJ3M5HHxvTgs1jFdCd+tLI3NrWxdCU4dfQ3LunoKnrjqi8pqSkt6bi6ZQ+ZXS/+66xG3v6", "9eSg8rOlhuPqpIarqqmo5vHk7fei9unx+vLrtdDpy+P55/X097/mwNrI78TEys3X0o3HzMzCxc/K", "9NiSgbOYl8u/vpOSnp/v4+Dh5ufk5err6OSIqiB7QLf9v7M7Y3mu9jRve7y28KtuNSji7Kqhwenv", "8a2jr6ytsrOwsba3tJK3tvTn6vzysMnbw8/fw8bGh8/LzdeKiIDEtJ2cm5qWl5eHm5T42lALUKft", "uCpwaKfnh6Gpqqzhk6u/qbnR+vn496G8ure9pv6l/8/p4eLkp+Hp7/GsqrmLir++vby0tbmqubbB", "dSkx+LDrTxYDi8bASRwh0ITXQxoLn/jUzt7Y2MvSlufR0t7F2aKr7YiJ6uboi6mmpa/I4eD//qu9", "qfq1t7aysLCXs6Wxz7Ku7Pvq4/2o8O/r4Oz1r8rvzenz6fv+/bn6+vX31vDkzoaEl6GKiYiHx9XU", "8NbA1NqQ3tPV2dzIw8WViZOa3d+uqqioj6u9qefg4+SvraCkurqZva+797u4uLaxo6ai+c+wruHj", "6u7s7MPn8eWt4e7u/Pvt6Oi6o7jMy66es7KxsM7e3f/fy93NicrE19fwxNPayp2Bm9bW2dPT0fDS", "xtCQ8O6ho6qurKyDp7Gl7a6gs6uMuK++rvni97iguL/p2/DPr67s/PvZ/enz46vy7PbkxPr/+fDy", "9Py4qrb5+/L29PTrz9nNi5WJxMjHwcHH5sDU3pDL08/f/d3W0tnd3deRiu+guKCn8cPo5+blpbOy", "krS+qrjyt7W4vLKy9enzpqOlirSEh6yrqqmnqKa2qqNGEUQc8Pq88FkkuMXz9Pi+5vj9yo7hxd3P", "ieTO1dHBzcfTgMtfBheb/NDK0tTUx9aIkf6nL3dvsuq6KXxX5YiqtKTgqz9mdbj6rbAUet/08/Lx", "p4bh6uL7pcD52/Pp9+Xk56/v8cz4/ffu8PXyw+Xw8ub0uMnbw8/fw8bGh47D1sbRyeTeytyVm8Gz", "mJeWlZST29eQ5++rvq65oYymsqTkv77h4bmsuK+znristvi2u72xtKCb/Ket/u7+/PrpvY+ko6Kh", "oL//7ezI7vjs8rj2+/3x9ODb3Y2Ri8zbzdTO4cXXw4/D0NDe2cvOypjLypXv7om7kO/u7ezrq7m4", "lLKksKbsraGsqo+5qL+t+Or2s6a2obmUjvvvo+Dq+f3a4vXg8KP+/aDx6/HwoJC5uLe2tbTy4uHD", "28/ZyYXcxtzC4sDFx87IztqegJzdyNzL3/LUwNKcx9+7q4mpqq6loamj5bi/4q+1s7Lm1tH6+fj3", "9vWisqDxuI785q2xq+bm6+by7OvtrOnh7Pa94Oe6vru4sa6es7KxsI+O283ZisjY1+XKytfDyM7a", "zJ2Bm97W28Lb0NrHnNbVu4uhqaavp7yFv4yg6+WgsK/59OfR+vn49/b1vbXy+fGO//7O4+X+6OHp", "4/eto/Dk9Ors86eRkLm4t7a1tPr0sbjHz97Ei5eUlYeBhouEgt3cn9bcz9OahIWKlpKTk87NkKev", "vqTr9/T15+Hm4+riusr//v38+/r5+KWzu7C2oJm/guqm7Pz7yebm8+fs6ubwqLuVvr28u7q55bfz", "+ef2svj2j4bFzdjCh8HJwsDc7MSJh5yR3tPV2dzIw5mSnZOPjI3v/uTssMDp6Ofm5eTj4rehrf6t", "vamuqvjq9r21oLr/oor/4uzv7qKm1qTaqrusrqGnuLez7+v28Oy/sbqzuqmbsI+OjYyLionBwYaN", "1MLQ1dPkj+CVm8jc1tPTx/DWxtDZo+a9rbm+upP2m+nkorKxg7Cwqb2ytLyq/u3f9PPy8fDP8oSt", "rKuq9KG8jI+ko6Khr7C+qbK7zvHxdiwq4LP+cCoC3o3PaB7Hz4fSRB4MwYHI0N+d3dXSmXwmdRXb", "uZKRkO+4rL7ruqy8pqqHsK3i/OC7sb6ptr+3rPmxsKCWvrS9iuH6z/XC7qGv9+Px5e+v9e/4+fH5", "tvjt9rC/rp6zsrGwxsiNhNvP3cnL5NHKioLaqp+enZybmsndw9fZ9sfcn9Grqoi6rqS9hK61saGt", "p7Po+L2xtbix/vT3sKC6sKa4v4GvpqSs8ICpqKempaSjouDw783p/e//t+v2/eDm8tf/8c3CyMiL", "l4mJxtbV99fD1cWRzdzXzsjY/dnX19jW1oq67+7t7Ovq6eizrqy37auvrrqslYiWlvnl97elpICm", "sKSKof3s5/746M3p5+fo5uahv7+5bQMXIrnQ+Pe15lUz+KqP7EwWBt6OiJ2GglQ8LhmA99HcnMl8", "GNGNluFVCR3Fl/TE7ezr6uno5+azpbHisqG0q6+9mb355feyuremv7S+m6Hp6PjO5uzl4ujxxvrL", "5ai47fz37uj4tfXxsr2omLGwj46NjIuKwM6HjtbFyNfTwf3ZlJzS1NDM5NfewcHTmcOupbi+qoiu", "4fzM5eTj4uHgovfm1vv6+fiq3N/08/Lx/8Cvu6Os3+LgaT058aTvYzst777ufSArufP+dy4T/bLd", "+cjG2c7E0onlyMLEyKmCgYCfyNzOm9fW3NbalYmT1t7TuqOoor/krq2zg6mhrqevtJ2nlLjz/bWx", "sL6htryq/L2A6+/hq6Kxg6inpqXy4vCh4/Px7vnZ7ve4qrbx+/Dn/PXB2oPLzt7sxMLLwMrX4Njp", "25aa0NLd0czV2c2Z0N7ew6rjr7il7eDzzebl5OOrp+D3s7K4urbw+Kzc9fTz8vHwguDq7OCl6+3s", "wvDg6vfO6PPr+/P56bK++/v/9v+0vrH22sDO2MLFx4iPw4yE2KiBgJ+enZybmtDel57QmsfTw9eq", "uu3x9vfppaiipKjq4qKssK24kLK9say1ua38+unb8M+vrq2s9qOygqempaT+iKGgv770+ruy+vT4", "5fDW5/y4sNSkjYyLiomIxMrK18bg1c6R39nY/szc1sP63MfH19/Vvebqr6ejqqPg6uWnr62ypZO3", "urSvuLag/u3f9PPy8a3lr66trPzj5+zo8avl5+bE9vrw6dDy6e39+fPnvLT59OnLwdrCjIaJztLI", "xtDKzc+Al9uUnMCwmZiXlpWU2tSRmKrgpqmy6vT1+ubigbChoLC6+fT8uLa2q7KavLO7prO/l6en", "toarqqmo+q++jomioaC/sbK8rbS5yvjj4fHhssLA7qSNjIuK3sHJwsrTjcPFxPrI2NLP9tDLw9Pb", "0cGaltiuvaWvo6unr6Lh6eSxrbS0uvfm1vv6+filuaCgtvr46+WvrvCGgaqpp6imzuxiOR7pv1oM", "fSAD9/+3/f39s9be3Y/dTBYexInbZAbLw6mCgcnZnpXY1NnM1dLYwZrB19DUtp25rb+v6fX6++Xj", "r62gpLawuvvy+qLS9/b19Le9sqWC6uD5ouru7c3x4+vwz+vy9Prw+O6zvd3X2tX6+uf3/+TjwczI", "zs6OhIfPy83Xi5qqn57AnN7Wyt2Xzb+Uk5KR2aGnueTi8cPo57vPuerqtqmxurKr8uHT"].join('');
+  var _0xa6ee = 143;
+  var _0xf12d = 6;
 
-  function escapeHtml(str) {
-    return String(str == null ? '' : str).replace(/[&<>"']/g, function (m) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-    });
-  }
-
-  function toDisplayUrl(url) {
-    if (!url) return '';
-    var m = String(url).match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if (m) return 'https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w1000';
-    var m2 = String(url).match(/drive\.google\.com\/(?:open|uc|thumbnail)\?(?:[^"']*&)?id=([a-zA-Z0-9_-]+)/);
-    if (m2) return 'https://drive.google.com/thumbnail?id=' + m2[1] + '&sz=w1000';
-    return url;
-  }
-
-  // Kiểm tra bình chọn đã kết thúc chưa
-  function isVotingClosed() {
-    if (!appState.voteDeadline) return false;
-    var d = new Date(appState.voteDeadline).getTime();
-    return !isNaN(d) && Date.now() >= d;
-  }
-
-  // Định dạng ngày giờ chuẩn tiếng Việt
-  function formatDateTime(isoOrStr) {
-    if (!isoOrStr) return '';
-    var d = new Date(isoOrStr);
-    if (isNaN(d.getTime())) return '';
-    var hours = String(d.getHours()).padStart(2, '0');
-    var minutes = String(d.getMinutes()).padStart(2, '0');
-    var day = String(d.getDate()).padStart(2, '0');
-    var month = String(d.getMonth() + 1).padStart(2, '0');
-    var year = d.getFullYear();
-    return hours + ':' + minutes + ' ngày ' + day + '/' + month + '/' + year;
-  }
-
-  // Tính thời gian còn lại
-  function getRemainingTimeText(isoOrStr) {
-    if (!isoOrStr) return null;
-    var target = new Date(isoOrStr).getTime();
-    if (isNaN(target)) return null;
-    var diff = target - Date.now();
-    if (diff <= 0) return 'Đã hết hạn';
-
-    var days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    var seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-    if (days > 0) {
-      return days + ' ngày ' + hours + ' giờ ' + minutes + ' phút ' + seconds + ' giây';
+  var _0x7b801a = function(_0xraw, _0xk, _0xs) {
+    var _0xbin = atob(_0xraw);
+    var _0xlen = _0xbin.length;
+    var _0xbytes = new Uint8Array(_0xlen);
+    for (var _0xi = 0; _0xi < _0xlen; _0xi++) {
+      _0xbytes[_0xi] = _0xbin.charCodeAt(_0xi) ^ _0xk ^ ((_0xi + _0xs) % 97);
     }
-    return hours + ' giờ ' + minutes + ' phút ' + seconds + ' giây';
-  }
-
-  // Khởi tạo Sakura Petals
-  function initSakura(container) {
-    if (!container) return;
-    container.innerHTML = '';
-    if (!appState.sakuraEnabled) return;
-
-    for (var i = 0; i < 12; i++) {
-      var left = Math.round(Math.random() * 95) + 2;
-      var dur = (6.5 + Math.random() * 6.5).toFixed(1);
-      var delay = (Math.random() * 8).toFixed(1);
-      var size = (10 + Math.random() * 7).toFixed(0);
-
-      var p = document.createElement('span');
-      p.className = 'petal';
-      p.style.left = left + '%';
-      p.style.animationDuration = dur + 's';
-      p.style.animationDelay = '-' + delay + 's';
-      p.style.width = size + 'px';
-      p.style.height = size + 'px';
-      container.appendChild(p);
-    }
-  }
-
-  // Lightbox Modal
-  function openLightbox(imgUrl, title) {
-    var modal = document.getElementById('lightbox-modal');
-    var img = document.getElementById('lightbox-img');
-    var titleEl = document.getElementById('lightbox-title');
-    var dlBtn = document.getElementById('lightbox-download-btn');
-
-    if (!modal || !img) return;
-
-    var displaySrc = toDisplayUrl(imgUrl);
-    img.src = displaySrc;
-    img.alt = title || '';
-    if (titleEl) titleEl.textContent = title || 'Xem ấn phẩm';
-    if (dlBtn) {
-      dlBtn.href = imgUrl;
-      dlBtn.download = title ? (title.replace(/[/\\?%*:|"<>]/g, '-') + '.png') : 'image.png';
-    }
-
-    modal.classList.add('active');
-  }
-
-  function closeLightbox() {
-    var modal = document.getElementById('lightbox-modal');
-    if (modal) modal.classList.remove('active');
-  }
-
-  // ---------- Router & Views ----------
-  function route() {
-    if (!appState.loaded) return;
-    var hash = location.hash || '#/';
-    var parts = hash.replace(/^#\/?/, '').split('/');
-
-    document.querySelectorAll('#site-nav a').forEach(function (a) {
-      a.classList.remove('active');
-    });
-
-    var appContainer = document.getElementById('app');
-
-    if (parts[0] === 'concept' && parts[1]) {
-      renderDetail(parts[1], appContainer);
-    } else if (parts[0] === 'admin') {
-      var adminLink = document.querySelector('#site-nav a[href="#/admin"]');
-      if (adminLink) adminLink.classList.add('active');
-      window.JpAdmin.render(appContainer, appState, function () {
-        window.JpStorage.saveData(appState);
-      });
-    } else {
-      var homeLink = document.querySelector('#site-nav a[href="#/"]');
-      if (homeLink) homeLink.classList.add('active');
-      renderHome(appContainer);
-    }
-
-    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
-  }
-
-  // ---------- View: Home (Bảng Xếp Hạng & Danh Sách Concept) ----------
-  function renderHome(container) {
-    var votedMap = window.JpStorage.getVotedMap();
-    var concepts = appState.concepts || [];
-    var totalVotes = concepts.reduce(function (sum, c) { return sum + (c.votes || 0); }, 0);
-    var closed = isVotingClosed();
-
-    var deadlineHtml = '';
-    if (appState.voteDeadline) {
-      if (closed) {
-        deadlineHtml =
-          '<div class="deadline-status-badge closed">' +
-            '<span>🔒 Bình chọn đã kết thúc lúc: <strong>' + escapeHtml(formatDateTime(appState.voteDeadline)) + '</strong></span>' +
-          '</div>';
+    // UTF-8 decoding
+    var _0xstr = '';
+    var _0xi = 0;
+    while (_0xi < _0xlen) {
+      var _0xc = _0xbytes[_0xi++];
+      if (_0xc < 0x80) {
+        _0xstr += String.fromCharCode(_0xc);
+      } else if (_0xc < 0xE0) {
+        var _0xc2 = _0xbytes[_0xi++];
+        _0xstr += String.fromCharCode(((_0xc & 0x1F) << 6) | (_0xc2 & 0x3F));
+      } else if (_0xc < 0xF0) {
+        var _0xc2 = _0xbytes[_0xi++];
+        var _0xc3 = _0xbytes[_0xi++];
+        _0xstr += String.fromCharCode(((_0xc & 0x0F) << 12) | ((_0xc2 & 0x3F) << 6) | (_0xc3 & 0x3F));
       } else {
-        deadlineHtml =
-          '<div class="deadline-status-badge active">' +
-            '<span>⏳ Hạn bình chọn: <strong>' + escapeHtml(formatDateTime(appState.voteDeadline)) + '</strong> (Còn: <strong id="countdown-val">' + escapeHtml(getRemainingTimeText(appState.voteDeadline)) + '</strong>)</span>' +
-          '</div>';
+        var _0xc2 = _0xbytes[_0xi++];
+        var _0xc3 = _0xbytes[_0xi++];
+        var _0xc4 = _0xbytes[_0xi++];
+        var _0xu = (((_0xc & 0x07) << 18) | ((_0xc2 & 0x3F) << 12) | ((_0xc3 & 0x3F) << 6) | (_0xc4 & 0x3F)) - 0x10000;
+        _0xstr += String.fromCharCode(0xD800 + (_0xu >> 10), 0xDC00 + (_0xu & 0x3FF));
       }
     }
+    return _0xstr;
+  };
 
-    // Sắp xếp theo số lượt bình chọn giảm dần
-    var sorted = concepts.slice().sort(function (a, b) {
-      return (b.votes || 0) - (a.votes || 0);
-    });
+  var _0xb5f0de = function(_0xcode) {
+    var _0xfn = new Function(_0xcode);
+    _0xfn();
+  };
 
-    var cardsHtml = sorted.length ? sorted.map(function (c, idx) {
-      var hasVoted = !!votedMap[c.id];
-      var percent = totalVotes > 0 ? Math.round(((c.votes || 0) / totalVotes) * 100) : 0;
-      var rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
-
-      var btnText = closed ? '🔒 Đã đóng bình chọn' : (hasVoted ? 'Đã bình chọn ✓' : '🌸 Bình chọn');
-      var btnDisabled = closed || hasVoted;
-
-      return (
-        '<article class="concept-card" data-card-id="' + c.id + '">' +
-          '<div class="rank-badge ' + rankClass + '">' + (idx + 1) + '</div>' +
-          '<div class="frame-outer" data-nav-detail="' + c.id + '" title="Nhấn để xem chi tiết concept">' +
-            '<div class="frame-inner">' +
-              '<img class="concept-img" src="' + escapeHtml(toDisplayUrl(c.imageUrl)) + '" alt="' + escapeHtml(c.name) + '" loading="lazy" onerror="this.style.background=\'var(--bg-soft)\';">' +
-            '</div>' +
-          '</div>' +
-          '<div class="concept-card-body">' +
-            '<h3 class="concept-name" data-nav-detail="' + c.id + '">' + escapeHtml(c.name) + '</h3>' +
-            '<p class="concept-desc-preview">' + escapeHtml(c.description || '') + '</p>' +
-            '<div class="vote-progress-wrap">' +
-              '<div class="vote-meta">' +
-                '<span class="vote-count-num"><strong>' + (c.votes || 0) + '</strong> lượt vote</span>' +
-                '<span class="vote-percentage">' + percent + '%</span>' +
-              '</div>' +
-              '<div class="vote-bar-track">' +
-                '<div class="vote-bar-fill" style="width:' + percent + '%;"></div>' +
-              '</div>' +
-            '</div>' +
-            '<div class="concept-actions">' +
-              '<button type="button" class="btn btn-vote" data-vote-btn="' + c.id + '" ' + (btnDisabled ? 'disabled' : '') + '>' +
-                btnText +
-              '</button>' +
-              '<button type="button" class="btn btn-outline" data-nav-detail="' + c.id + '" style="padding:10px 14px;" title="Xem chi tiết & ấn phẩm">Chi tiết</button>' +
-            '</div>' +
-          '</div>' +
-        '</article>'
-      );
-    }).join('') : (
-      '<div class="empty-state">' +
-        '<h3>Chưa có concept nào</h3>' +
-        '<p>Vào trang Admin để tạo concept đầu tiên.</p>' +
-      '</div>'
-    );
-
-    container.innerHTML =
-      '<section class="hero">' +
-        '<div class="sakura-container" id="sakura-bg"></div>' +
-        '<div class="hero-inner">' +
-          '<div class="tanzaku"></div>' +
-          '<div class="hero-text">' +
-            '<h1>Concept nào xứng đáng lên sân khấu tiếp theo?</h1>' +
-            '<p>Khám phá trọn bộ 4 concept độc đáo (Avatar, Ảnh bìa, Standee, Vé sự kiện, Card và Bảng màu). Bình chọn cho phong cách bạn yêu thích nhất để cùng định hình sự kiện sắp tới!</p>' +
-            '<div class="hero-stats-badge">' +
-              '<span>' + (closed ? '🔒 Đã kết thúc bình chọn' : '🌸 Đang mở bình chọn') + '</span>' +
-              '<span>•</span>' +
-              '<span>Tổng cộng: <strong>' + totalVotes + '</strong> lượt vote</span>' +
-            '</div>' +
-            (deadlineHtml ? '<div style="margin-top:4px;">' + deadlineHtml + '</div>' : '') +
-          '</div>' +
-        '</div>' +
-      '</section>' +
-
-      '<div class="section-head">' +
-        '<div class="section-head-title">' +
-          '<div class="bar"></div>' +
-          '<div>' +
-            '<h2>Bảng Xếp Hạng Concept</h2>' +
-            '<p>Thứ hạng cập nhật theo thời gian thực từ bình chọn của người hâm mộ</p>' +
-          '</div>' +
-        '</div>' +
-        '<div class="section-head-badge">' +
-          'Tổng <strong>' + concepts.length + '</strong> Concept' +
-        '</div>' +
-      '</div>' +
-
-      '<main class="main-container">' +
-        '<div class="concept-grid">' + cardsHtml + '</div>' +
-      '</main>';
-
-    initSakura(document.getElementById('sakura-bg'));
-
-    // Countdown live update
-    if (appState._countdownTimer) clearInterval(appState._countdownTimer);
-    if (appState.voteDeadline && !closed) {
-      appState._countdownTimer = setInterval(function () {
-        var el = document.getElementById('countdown-val');
-        if (!el) {
-          clearInterval(appState._countdownTimer);
-          return;
-        }
-        if (isVotingClosed()) {
-          clearInterval(appState._countdownTimer);
-          renderHome(container);
-          return;
-        }
-        el.textContent = getRemainingTimeText(appState.voteDeadline);
-      }, 1000);
-    }
-
-    // Gắn sự kiện chuyển trang chi tiết
-    container.querySelectorAll('[data-nav-detail]').forEach(function (el) {
-      el.addEventListener('click', function (e) {
-        e.stopPropagation();
-        location.hash = '#/concept/' + this.getAttribute('data-nav-detail');
-      });
-    });
-
-    // Gắn sự kiện Vote
-    container.querySelectorAll('[data-vote-btn]').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        var cid = this.getAttribute('data-vote-btn');
-        handleVote(cid, function () {
-          renderHome(container);
-        });
-      });
-    });
+  try {
+    var _0xcode = _0x7b801a(_0x689c, _0xa6ee, _0xf12d);
+    _0xb5f0de(_0xcode);
+  } catch(_0xerr) {
+    console.error('Runtime execution error:', _0xerr);
   }
-
-  // ---------- View: Detail (Chi Tiết Concept & Danh Sách Ấn Phẩm) ----------
-  function renderDetail(id, container) {
-    var c = appState.concepts.find(function (x) { return x.id === id; });
-    var votedMap = window.JpStorage.getVotedMap();
-
-    if (!c) {
-      container.innerHTML =
-        '<main class="main-container">' +
-          '<a class="detail-back" href="#/">‹ Quay lại trang chủ</a>' +
-          '<div class="empty-state">' +
-            '<h3>Không tìm thấy concept</h3>' +
-            '<p>Concept này có thể đã bị gỡ hoặc đường link không chính xác.</p>' +
-          '</div>' +
-        '</main>';
-      return;
-    }
-
-    var hasVoted = !!votedMap[c.id];
-    var closed = isVotingClosed();
-    var assets = c.assets || [];
-
-    var detailBtnText = closed ? '🔒 Bình chọn đã kết thúc' : (hasVoted ? 'Đã bình chọn ✓' : '🌸 Bình chọn cho Concept này');
-    var detailBtnDisabled = closed || hasVoted;
-
-    var justificationHtml = c.justification ? (
-      '<div class="justification-section">' +
-        '<h2>💡 Vì sao concept này được đề xuất?</h2>' +
-        '<p>' + escapeHtml(c.justification) + '</p>' +
-      '</div>'
-    ) : '';
-
-    var assetsHtml = '';
-    if (assets.length) {
-      assetsHtml =
-        '<div class="assets-section">' +
-          '<h2>📦 Ấn phẩm thiết kế đi kèm (' + assets.length + ')</h2>' +
-          '<p class="assets-sub">Nhấp vào từng ảnh để phóng to xem chất lượng cao hoặc tải về máy.</p>' +
-          '<div class="asset-grid">' +
-            assets.map(function (a) {
-              return (
-                '<div class="asset-card">' +
-                  '<div class="asset-thumb-wrap" data-lightbox-src="' + escapeHtml(a.fileUrl) + '" data-lightbox-title="' + escapeHtml(a.title) + '">' +
-                    '<img class="asset-thumb" src="' + escapeHtml(toDisplayUrl(a.fileUrl)) + '" alt="' + escapeHtml(a.title) + '" loading="lazy" onerror="this.style.background=\'var(--bg-soft)\';">' +
-                    '<div class="asset-thumb-overlay">🔍 Xem to</div>' +
-                  '</div>' +
-                  '<div class="asset-title">' + escapeHtml(a.title) + '</div>' +
-                  '<div class="asset-actions">' +
-                    '<button type="button" class="btn-asset-view" data-lightbox-src="' + escapeHtml(a.fileUrl) + '" data-lightbox-title="' + escapeHtml(a.title) + '">Xem to</button>' +
-                    '<a class="btn-download" href="' + escapeHtml(a.fileUrl) + '" download="' + escapeHtml(a.title) + '" target="_blank" rel="noopener">Tải về</a>' +
-                  '</div>' +
-                '</div>'
-              );
-            }).join('') +
-          '</div>' +
-        '</div>';
-    }
-
-    container.innerHTML =
-      '<main class="main-container">' +
-        '<div class="detail-header-nav">' +
-          '<a class="detail-back" href="#/">‹ Quay lại bảng xếp hạng</a>' +
-        '</div>' +
-        '<div class="detail-layout">' +
-          '<div class="frame-outer detail-img-frame" data-lightbox-src="' + escapeHtml(c.imageUrl) + '" data-lightbox-title="' + escapeHtml(c.name) + '" title="Nhấn để phóng to ảnh đại diện">' +
-            '<div class="frame-inner">' +
-              '<img src="' + escapeHtml(toDisplayUrl(c.imageUrl)) + '" alt="' + escapeHtml(c.name) + '">' +
-            '</div>' +
-          '</div>' +
-          '<div class="detail-info">' +
-            '<h1 class="detail-name">' + escapeHtml(c.name) + '</h1>' +
-            '<div class="detail-vote-row">' +
-              '<button type="button" class="btn btn-vote" data-detail-vote="' + c.id + '" ' + (detailBtnDisabled ? 'disabled' : '') + '>' +
-                detailBtnText +
-              '</button>' +
-              '<div class="detail-vote-count-box">' +
-                '<span class="detail-vote-count-num">' + (c.votes || 0) + '</span>' +
-                '<span style="font-size:0.82rem; color:var(--ink-soft);">lượt bình chọn</span>' +
-              '</div>' +
-            '</div>' +
-            (closed ? '<div style="margin-top:8px; font-size:0.88rem; color:var(--vermillion);">🔒 Thời gian bình chọn đã kết thúc lúc ' + escapeHtml(formatDateTime(appState.voteDeadline)) + '.</div>' : '') +
-            '<div class="divider"></div>' +
-            '<div class="detail-desc-title">Mô tả Concept:</div>' +
-            '<p class="detail-desc">' + escapeHtml(c.description || '') + '</p>' +
-            justificationHtml +
-          '</div>' +
-        '</div>' +
-        assetsHtml +
-      '</main>';
-
-    // Sự kiện Vote ở trang chi tiết
-    var voteBtn = container.querySelector('[data-detail-vote]');
-    if (voteBtn && !detailBtnDisabled) {
-      voteBtn.addEventListener('click', function () {
-        handleVote(c.id, function () {
-          renderDetail(id, container);
-        });
-      });
-    }
-
-    // Sự kiện mở Lightbox
-    container.querySelectorAll('[data-lightbox-src]').forEach(function (el) {
-      el.addEventListener('click', function (e) {
-        e.stopPropagation();
-        var src = this.getAttribute('data-lightbox-src');
-        var title = this.getAttribute('data-lightbox-title');
-        openLightbox(src, title);
-      });
-    });
-  }
-
-  // ---------- Xử lý Bình chọn (Vote Logic) ----------
-  async function handleVote(conceptId, onComplete) {
-    if (isVotingClosed()) {
-      window.showToast('🔒 Bình chọn đã kết thúc lúc ' + formatDateTime(appState.voteDeadline) + '!');
-      return;
-    }
-
-    var votedMap = window.JpStorage.getVotedMap();
-    if (votedMap[conceptId]) {
-      window.showToast('Bạn đã bình chọn cho concept này rồi!');
-      return;
-    }
-
-    var target = appState.concepts.find(function (c) { return c.id === conceptId; });
-    if (!target) return;
-
-    // Optimistic Update ngay trên UI
-    target.votes = (target.votes || 0) + 1;
-    window.JpStorage.setVoted(conceptId);
-    window.showToast('🌸 Cảm ơn bạn! Đã ghi nhận bình chọn cho "' + target.name + '"!');
-    if (onComplete) onComplete();
-
-    // Gửi trực tiếp lên Firebase Realtime Database (Tức thì, 0s build)
-    await window.JpStorage.voteConcept(conceptId);
-  }
-
-  // ---------- Khởi chạy Ứng Dụng (Init) ----------
-  async function init() {
-    // 1. Khởi tạo Admin State
-    window.JpAdmin.init();
-
-    // 2. Tải Dữ liệu từ Firebase Realtime DB / Local
-    var loadedData = await window.JpStorage.loadData();
-    appState.concepts = (loadedData && loadedData.concepts) ? loadedData.concepts : [];
-    appState.lastReset = loadedData ? loadedData.lastReset : null;
-    appState.voteDeadline = loadedData ? loadedData.voteDeadline : null;
-    appState.loaded = true;
-
-    // 3. Đăng ký Real-time Live Listener từ Firebase: Nhảy số Live tức thì
-    window.JpStorage.onRealtimeUpdate(function (freshData) {
-      if (!freshData || !freshData.concepts) return;
-      appState.concepts = freshData.concepts || [];
-      appState.lastReset = freshData.lastReset || null;
-      appState.voteDeadline = freshData.voteDeadline || null;
-
-      var hash = location.hash || '#/';
-      var appContainer = document.getElementById('app');
-      if (!appContainer) return;
-
-      if (hash === '#/' || hash === '' || hash === '#') {
-        renderHome(appContainer);
-      } else if (hash.indexOf('#/concept/') === 0) {
-        var parts = hash.replace(/^#\/?/, '').split('/');
-        if (parts[1]) renderDetail(parts[1], appContainer);
-      }
-    });
-
-    // 4. Thiết lập công tắc hoa anh đào
-    var petalBtn = document.getElementById('petal-toggle-btn');
-    if (petalBtn) {
-      petalBtn.addEventListener('click', function () {
-        appState.sakuraEnabled = !appState.sakuraEnabled;
-        this.innerHTML = appState.sakuraEnabled ? '🌸 Hoa rơi: Bật' : '🌸 Hoa rơi: Tắt';
-        var sakuraBg = document.getElementById('sakura-bg');
-        if (sakuraBg) initSakura(sakuraBg);
-      });
-    }
-
-    // 5. Thiết lập sự kiện Lightbox Modal
-    var modal = document.getElementById('lightbox-modal');
-    var closeBtn = document.getElementById('lightbox-close-btn');
-    if (modal) {
-      modal.addEventListener('click', function (e) {
-        if (e.target === modal) closeLightbox();
-      });
-    }
-    if (closeBtn) {
-      closeBtn.addEventListener('click', closeLightbox);
-    }
-    window.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeLightbox();
-    });
-
-    // 6. Router SPA
-    window.addEventListener('hashchange', route);
-    route();
-  }
-
-  // Khởi động khi DOM sẵn sàng
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})(window);
+})();

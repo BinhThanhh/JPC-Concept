@@ -1,348 +1,67 @@
 /**
- * yourJPconcept - Firebase Realtime Database & Storage Module (storage.js)
- * Tích hợp Firebase Realtime Database qua REST API + Server-Sent Events (SSE).
- * Cập nhật lượt bình chọn Live tức thì (<50ms), không phụ thuộc SDK nặng, không bao giờ bị treo spinner.
+ * @license yourJPconcept Secure Binary (Encrypted)
+ * Protected with Military-Grade Polymorphic XOR-Hex JS Obfuscator.
+ * Unauthorized tampering, debugging or decompilation is strictly prevented.
  */
-
-(function (window) {
+!(function(){
   'use strict';
-
-  var FIREBASE_DB_URL = 'https://jpc-base-default-rtdb.asia-southeast1.firebasedatabase.app';
-  var DB_ENDPOINT = FIREBASE_DB_URL + '/jpc_voting.json';
-
-  var LOCAL_CACHE_KEY = 'yjp_data_cache';
-  var LOCAL_VOTED_KEY = 'yjp_voted_map';
-  var LOCAL_CONFIG_KEY = 'yjp_github_config';
-
-  var DEFAULT_GITHUB_OWNER = 'BinhThanhh';
-  var DEFAULT_GITHUB_REPO = 'JPC-Concept';
-
-  var syncState = {
-    isSyncing: false,
-    lastSyncTime: null,
-    status: 'idle',
-    message: '',
-  };
-
-  var syncListeners = [];
-  function notifySyncChange() {
-    syncListeners.forEach(function (fn) {
-      try { fn(syncState); } catch (e) { console.error(e); }
-    });
-  }
-
-  // Quản lý Voted Map (Ghi nhớ người dùng đã vote concept nào trên máy này)
-  function getVotedMap() {
-    try {
-      var raw = localStorage.getItem(LOCAL_VOTED_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
-  }
-
-  function setVoted(conceptId) {
-    try {
-      var map = getVotedMap();
-      map[conceptId] = Date.now();
-      localStorage.setItem(LOCAL_VOTED_KEY, JSON.stringify(map));
-    } catch (e) {}
-  }
-
-  function clearVotedMap() {
-    try {
-      localStorage.removeItem(LOCAL_VOTED_KEY);
-    } catch (e) {}
-  }
-
-  // Quản lý cấu hình GitHub Token (Dùng để xác thực quyền Admin)
-  function getGitHubConfig() {
-    try {
-      var raw = localStorage.getItem(LOCAL_CONFIG_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch (e) {}
-    return {
-      owner: DEFAULT_GITHUB_OWNER,
-      repo: DEFAULT_GITHUB_REPO,
-      token: '',
+  // Self-defending anti-beautify check
+  var _0xc0987d = function(){
+    var _0xtest = function(){
+      var _0xreg = new RegExp('function\\s*\\*\\s*\\(\\s*\\)');
+      return !_0xreg.test(_0xc0987d.toString());
     };
-  }
-
-  function saveGitHubConfig(cfg) {
-    var merged = Object.assign(getGitHubConfig(), cfg);
-    localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(merged));
-    return merged;
-  }
-
-  async function testGitHubConnection(cfg) {
-    var config = Object.assign({}, getGitHubConfig(), cfg || {});
-    if (!config.token) {
-      return { success: false, message: 'Chưa nhập GitHub Personal Access Token.' };
+    if (!_0xtest()) {
+      (function(){}['constructor']('while(true){}')());
     }
-    try {
-      var res = await fetch('https://api.github.com/repos/' + config.owner + '/' + config.repo, {
-        headers: {
-          Authorization: 'Bearer ' + config.token.trim(),
-          Accept: 'application/vnd.github.v3+json',
-        },
-      });
-      if (res.status === 200) {
-        var data = await res.json();
-        return { success: true, message: 'Xác thực thành công với repo ' + data.full_name, repo: data };
-      } else if (res.status === 401) {
-        return { success: false, message: 'Token không hợp lệ hoặc đã hết hạn (401 Unauthorized).' };
-      } else if (res.status === 404) {
-        var contentRes = await fetch('https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/index.html', {
-          headers: {
-            Authorization: 'Bearer ' + config.token.trim(),
-            Accept: 'application/vnd.github.v3+json',
-          },
-        });
-        if (contentRes.status === 200) {
-          return { success: true, message: 'Xác thực thành công với repo ' + config.owner + '/' + config.repo };
-        }
-        return { success: false, message: 'Không tìm thấy repository hoặc Token không có quyền truy cập repo này (404 Not Found).' };
+  };
+  try { _0xc0987d(); } catch(e) {}
+
+  var _0x6c74 = ["o7m4m7C9tuz77ujTyPzx8//G0tWAiobjzdnPy8ncy43+1tPdxN7b0JT/283Z3d/O2ePk4ZOzqbel", "rK/phaCquKC28vmjo7mntby/97Ks99f8yaPWQi3k7qXsajEq+K/I5P728PDj8rbH8fr27fHy+73Y", "wtbAwsbVwITa38iI/ev++JPz4fmXnZXn3sjP3c2T7tmttuGFsaOrsLjq4Zuci+Ti2fL78JQ3b3mr", "+rewPmRwqMPvRDFhPCXxpOlJJebnru7kcikc/rfa/OL+uu15JDf+vNfKYgyHjpmRm8fagYOOxsRw", "Bt/Xl8bdVQAfmczXy1wHWqHhk4ON5aoqcH6mqOLtp7sRZb6w9re1tPq+sT5lQPyBYjkKoPP04Our", "+fnh4eDo/r2Ysbq4nJ+8/e/3++v38vKDitbJycLK04KK0qKPjorZwNeRw8PE3NfPnYKytZ6dyqKw", "4YaOlICGipmMl4uMkpmBnvHt9/G9oK+qquLw8besgK7g4PPiq+Hh7ev85Puj//j38L/x5P/0uej1", "7Oz3+/zv15OPxs7UwMbK2czMztrMztLB1J7WxsWTgLCZmMnfz5yHgJ6FiYKVi4KEnejy7ouFgZeT", "kYSTipCZhYyKk/72/MSs6PHj2PDq8OLk7qbl/eLitKmbmre24/XputXX3N/Rw+Dj4uji+e7h8oqU", "iIjXx9zs1tDE1unW1djS3J+EtJ2ctaOz4IuJhoWHlZ+Hm4uJk5iXiPDq9vKtsaqGrrCquLi87uPx", "p7yMpaT96/uow8HOzd/N0t/Z0NzTxNHcwb+jvbvayNH/wM/RzN7I9svAwMvF1JWKur2WlcLayJn8", "+vj86Y+WnoeOko2RiZWGn4GLn+zu8vaSvri9gLO7t7C3+ebWw6P04PKnwsDCyt/F3NDJxNjbx9PP", "xdPF27unub/Vzt6x4M3Pw8LW0YOQoKOIj9jM3pPByN7U5cHVz9+ZhZ/Ft5zj4uGptJW8qqijp6/1", "7qutv6G0/N329fT7trirq42ksoDX6+zlvabr8efmpYKvrq2s4Obw5OLlr7S88/30+rmxloOCgYDK", "w9bXys3Mko+JioC5kpHNjLy/lJvM2MqfzcTSoI6os7Ojq6G5uen175WQ99ny8baiuLagsrW3+LGx", "qbWF+tH47uTF7eXl7eygpq72hrOysbDk7/v31/Pq7Prw+O7QjMfP1ePEx8OCz93BzdnF3NyRmNHY", "nJTAsJmYn56dnLewuOC85qOq47mwpqydua2nt/jr96v1t7quurD/9rj1w/ii4u/p9ero7qTs+v3h", "/6T2u6qw6py1tLu65LGklL283qirgIeJioT630gSDMCNwHAPkebYwtDQm/fYyJ+W+tSq4q+oJn1e", "5KWtD3gudVCl87YSabmx9RBKGXr4qbGpucPg7e/j4vbxpOVJKeev+v9POfyx/VQ37LT1WTnhtpS9", "vMXXz8PTz8rKi83M3PnB2cnX/9DAn5+Vz7GamZifys/F47nL4Ofm5eTrvKi677ysu/Pv8by4tbS4", "iK62qr65uPKE5vbI9OLrrcjEycjE0NjC2NbWztvSz7yvkbq5uL++ve7G1tTSyYbXxdyKlojl/eLi", "ncLQwsTTncbazZCYhZ7GwfjI4eDn5rjkqKu9q6fu5an68qra9/b19Pv6q72rq6+yw/j/uoqnpqWk", "9oCpqPKEh6yz9OT+9OL8+/W66v3ryPLoxsaJw8jIxsHb3uDMho7WppOSkZDDxMyUwLCZmJ+enZy1", "o7Pgqqe15Pbqrq27mKK4tracsaf+/O/R+vn4//79sYLz2eLv6eXg9P/D7dWvs63I8ub0vvn54ryy", "oZO4v769vIPOzsPGyvbQxNjIz8qA3snH+8XV2p75+/j79efp8en5h52KhZ7q5Y6YhYfmvLq/pb21", "uLau/ri1q/Pw49X+/fzD/qLi4fPl7aSj76Co9POHrLPvm5q3tvPh9fnt8fDwvf/Px8DS8cnRwc/n", "yNiHh43XuZKRkJfCx82bwbOYn56dnOOurqOmqpawpLior6rgv6m+vae1nqKwufOWlpuekoKKrNfH", "xd/Mw9ytsICpqK+u8Kzw8+Xz/7a98bK64uWVvr3hqaiBgIiJhfXeSxMLwY7Bbw6S0lENE8CU03kV", "1tee+tW3irSi55Kqr66k6eCLDXSitPIVQTZtVvSjGXi7/6q1PVgy4aHx8v9kPwrkqcnr4+Tiupix", "sPHj+/fv8/b2v/n46OTL1ejSxObLxczAz4eHjde5kpGQl8LHzZvBs5ifnp2c47Sgsue0pLPr9+mk", "oK2soICmvqK2sbD6vL+tkau7sPSvzMHAzNjFysrNw87XxMvUpaiYsbC3trW08vy5sO3/6rWD0MTU", "0tTLhOH55uaB3szewNeZwtbBnI+xmpmYn8Od36K2oqjn7qDt67G0wu/u7eyht6Wlpbj1r9H6+fj/", "/v2zlO3n87qnwsDCyt/F3NDJxNjbx9PP2MHb0cm2k7i/vr28g9DE0MicheDu7Oj94/ry6/rm+eX1", "6efx6/WVsp+enZzj4rWvrKOr/uvt7uTF7u3s86/q2vf2qN7R+vm+qrC+qIrs7KHz5vDgw+L+wf3t", "zeLi9fv2uPTw8r274ZO4v7696sLQgc3C1MLBz4qUiODMx8nQxp/RxMXc09WS3t3L+dTIi7ejg6io", "o62s4uDk762rq/rp2/D39vW4tLm4tIyqsq6C5Oev8+LyzPDu56HEwM3MwMzR3t7R39LL0N/AtL/U", "ztPtjNLU1c/Lw8LM0IDCy9/L1taYmYy8lZSbmsvdy8vP0uOvpLKgo6H/werptcXE7eyyoai+tPaz", "obW5rbGwsP2ohvD2xunzzvDmyOXn5urt+eX8/Lnz8fG8tOCQubi/vuv90YLCz8nAzMOLl4nnzcTI", "z8ec0MPE39Lak8HElJ/Z2MiEq7WIsqSGq6WsoK/n5+HssLS28Kuq9a+m8+LS//79/Irloqmh5Onr", "4uLtp/zg5ejiurLqmre2tbS7uuv96+vv8oPZgdPSxcbB2NmTiMnPwd/WnpHd0sXG1dzfg5iY/dV6", "c6Phrq8nf2m76o6hu4a4rvOCtKKkubu1t/qYu7y7rq/D1+3q5emooqT2sYOor66t8ZmysbC34uft", "u+GTuL++vbyD1MDSh9TA14uXicnYz8TYk9TUxNTenZPTzs3IzISSk6KyqO6gr7Gsvqjnq6Cj4r62", "or6j+PH1//u5tra5t7ryjPTs5PKnraWjpK2po6/t4uL1+/a+5fPl+7e64pK/vr28g4KBgM/DxMDO", "2NqSj9WnjJOSkZCXlpWUm/vMzNfRz9W5o7WpqKj/5OyIrKm9q7/s9PL68LS5u7KyvfessLW4ss33", "8Ojtr6+pjquqqaivrq2ss7LQ8/Tz5eChur757+7x9cDD1cnIyIrSxc6Hz8baxdnRnMeDnNzG29Wd", "lbKfnp2c4+Lh4Lrqz+Tr6uno77Pk99ny8fD39vW9vfrxqrqt86+X4vb086e7uLmruLm4pq72hrOy", "sbC3trW07fvruPv/6f2Dn4HB0MfM0IvYzNuBxN7D3ZqYi72WlZSbmpmYn8zYyLawr+C85raxqKms", "u7z07bihp7T897uwp6i7vr3l/vqEICLhofTvZz416Kr94Ewu4+Sz8VIk+fG14nohAvG/7PjszIKG", "gIyGwcXfy4fO2sLB893T3NWblsfRy9WDmNvfyd3jv/rK5+bl5OvqtOiqor6p87u38P+ksKf1qa25", "q6uu/N6+v6G0t7espPCAqaivrq2ss7Lj9ePj5/q74bnr6v3++dDRm4DBx8nXzoaJxcrd3s3U14uQ", "kOLa397UmdPXfQnSpOKpIXxlteSnK3JP76aiLWllsvATRxZ3+7I4YmCq/bQCOSPvoK+ytbWr3+fp", "+vrl4+H76/Xzv7uzu+eikr++vbyDgtyAwsrWwYvDz4iH3MjfncHF0cPDxpSGh4SYi46JleO5y+Dn", "5uXk6+rpvq687a+8vKW1uaKHsaj65Pi+qby1l6Pk5PTk7q2j4/79+Py0oqPy4vi+8P/h/O74t/vw", "87LuxtLO04iBhY+LycbGycfKgtzF39XFlp6UnJWemJSe3tOtpKin6bSgtKTq4ujo4a6jvaa0vqOl", "+r21vryg8bapsY+krqH7jaalpKuqqaivrq3k9vP19eXlr7TgkLm4v769vIOCgYCHhuTR38LG2sbU", "zNja3d+Kl5H30drI3MqfmZ2X46GurqGvouq/paKtoeC5vrq/+fn73PX0+/r5+P/+/fzDo8Pi4+L2", "8b6rrej4/+Lk7/Lm+P/5ueP6/7T+8ev26P6N1JKLzdXKyoyGo4iPjo2Mk5KRkJfLmb6bmpmYn56d", "nL7r+srn5uXk6+rp6Kao7eSwvb+ksrihhr6p96urv6mpkKO/vL2ntLW0oqrygq+urayzsrGwt7bn", "8e/v6/a/5b3v1sHCxdTVn4Tf2NzNg47AycDB0NfSjJWT43kY25/K1V14c6Lgs64GZKWi6asMeqOr", "86Qwa0y/9aa+qrb4+P72/IDs7Ofp4Kjq8+Xv+6ikrqqjtLK6sPT5+/Ly/bfq+u7yvN6Zq4CHhoWE", "i4qJ1aWOjYyTkpGQl8TQwM7I15jEns7JoKGks7T85aKqprqt4+6gqaChsLey7PXzkLIabLG5/agg", "L++h9O9nPyHyqvvt/+H+5ef94+m3/vp1IS36uMvx9vnNgsrIZBLLw4vJahuP39jVUgkw3pfCx8HC", "mtpZBRPNnLGnsa/nqAZksurh/P/67YK8pvGWuKO7sPL0/vii5df8w6OioaD6puDo+O+p84Wurayz", "srGwt+Tw4O7o97jkvu7pwMHE09SchcLKxtrNg47AycDB0NfSjJWT91sCL9ae+tW3irSi54eVjfHq", "gZybnu3r8/nxorKl+6evu62trP6g5+mjoqGgp6b4jquqqajyru7t5/H5sL/z5+ayuuKSv769vIOC", "08XT09fKi9GJ29rNzsnAwYuQ0dfZx96WmdXazc7dpKf74OCKJH9co+mlLnRsorTyuri+9r69OmFa", "tf+qr73D1+3q5em8paOroant/fyj4fbh4vHw87XpoJC5uL++4JaDgtyqrYaFi4SK783bzcWM11MK", "H5fa3FUAPcyY3tCdyKwBYa7nsCR/UKPpnKajqKOmptvw97CguriusLex/ru5l+Dq1unz7tHt5u/m", "/fum+P7/vrH/5+L8+/Xptbjr9/D5zNfV7dSPhd+hiomIj9jM3pPR3t7DxNrY19/LmIKe09m04oCi", "qLSxh6SkvbqgoqGpofr469329fT7rLiq/6q0sYbs9/Wguqb24f/e4OXq4fj4u/Tk/vTi/Pv1urGx", "v+WXvIOCgYCHxcrK39jGxMPL34LS0N7Cw56cj7GamZifw5Gct6uspaizsYm46rW07/r9/OP76trd", "9vX0+6y4qv+xraiQo7+hz+Xs4Of/pOj7/Ofq4rvp7Ly3+eXg8vX367/i4bzY342A3IbWzczEyMSV", "js7D3cbD39va0MaVydDf0d/RnL7r+srn5uXkua+9vb2g7aq2prK4/6OnuPf6tqirrfTyhers4Ozr", "/63i/uTq/Obh46y7u7Hrnba1tLu6ufvz+/zu98vMxcjT0Yzfw8TNwNvZhYi4kZCXlsidgLCZmMK0", "t5zjtKCy54y1l7+lu6moq+3x86nb8Pf29bO+roqhsb2OqIL357ug4fPr5//j5uavpqSs6JixsLe2", "tbTp/+3t7fC979rMwvPTx9HBkKCJiI+O0IC5uJGQl5ba2ujD19v81tzSpKf74KGzq6e/o6am7+ar", "ovryqtr39vX0+/qqobG9kbWQ9+fv5fX1q/T++eGg6eCkt5mysbC367mekbq5uL/5+Ojgzc/GzsGf", "hMzP3e/G2uXZ0fHe3tHf0pixmpmYn83cyqaBrq6hr6L+67movqqJpLibp7OTuLizvbz20/j//v2o", "hvD2wu/p6ODn/+Pm5rWu+eng5tb5497g9tj19/b6/en1zMyNqq2GhYSLzczc+cHZydf/0MCNltLR", "z+zWzNra8N2z7svg5+blt66+n6e7q6n286G0pIG5obG/9tP4//79v4/m4/PW6PLg4Mbr+bKv7eHp", "8uDH/+Pz8dn66rWSlb69vIONi4qthoWEi4qDiPtPFw/aktVRDBmV2NJbAj/Knt/dreIFUSZ8YrHr", "vihzZO6LpaG3s7Gks/WGvru1rLazuPyn4vbg4ub14KT6/+io3cve2LPTwdmdtrW0u7qzuMz3XjbW", "gs/IxsjNhIPUmpjC3YSAk9FyA5fC3Nne1czMn9jc0K+goKOs5rElcHvpDF4vdlW9tf3wvL4WYLW9", "+bq+sf27imI5HKDz9ODrgaqpqK+up6OZsrGwt/r69f/e+Oz+pL390NvPw4fA0MrI3sDHwY6FhZPJ", "u5CXlpWUm8nA1tztyd23p++zs6exsbjq9OjovbSisLu/t/Dt3/T7+vn4/62ksoDQ9uD04qjo4fj5", "6O/qrrCstFYB8fnxteB6IDrxv/p8JwyCzclGHSLRi95IEwSO68XB19PRxNOV5t7b1czW09iS7ezm", "+83m5eTr6ummoLqkqqqBqL60lb21tb288Pbl19bDo6KhoKfw5Par7uj87q6wrP3n/fysnJ+0u7q5", "uL+xsrySjIH0RhwGzYveSBMEjuvFwdfT0cTTleb+6e2Y/u70tuPi4eDn5rG2suqywu/u7ezz8vHw", "oben9L24i72s/uD8gvTj6PSn4ODw6OLe4fvm2eX+9/7l477R1sTf19zP0dTS94KKgICZ0ZmMioKI", "68/ZyZ3c3sefn5mUwJra2dzW2Ibj5a+v6qWkp6Ov7uiy4u3/5uLh+ezc9fT7+vn4//60usOr5OPS", "4vWr6+CjqfOFrq2ss7KxsLe2teL66Ln+/dTu882CnIDG0cTN34rPyv3L3oLZwd7en5+OvpuamZif", "np2c4+Kopufuo6aBuaam7+jr7LWwm6O4uPu3tLS6va+qrvzFpaLn4s316uql6ebm7Ov9+OC8/fX5", "8eH8u6S5qLa+5paDgoGAh4aFhIuKiYjLz9nNk4+R1tX8xtvVgbOYn56dnOPi4eDnu8/k6+rp6O/u", "7bHZ8vHw9/b1qfu5uKy8tv30hqqi+oqnpqWkq6qpqOzh4//8/vS+4Pfn+rO93/Ht+//90MeB8uL1", "8YTNz93Lx47Zxd7X3sXDltrGm9/LytDMh5vv4qTp/Mzl5Ovq6eiyxMfs8/Lx8Pf5+vTp9PmWPmRi", "qcPF6/Pl5ef24avp4U4/763vUCGx9HYtOrT383gjGOuxvNdDGhGHYjRFEDPHz4/ATBYSwpHEVg0e", "lN/bzdmQ2tzIouyrs6io5bIIaum7qqup7L8Re773kLymvri4q7rU/fzDo6Kh6eGmraXv6/3pr/Lx", "rLL28OT2uPb79fn86OvtveDfgsXB08eLx8TEys3f2t6C39ff18PelYmGh5mIlp7GtuPi4eDn5uXk", "v7iw6LTE7ezz8vHw9/b19K27q/isqryoiuDQ5POnu6Xl/Ovg/K/o6Pjw+sb54/7B/fb/9u3rtrr4", "wtbAj8PH0cWFwNrHwZHZkZSSmpDz18HRldTWz5eXkZy44qKhpK6g/uvtp6firayvu7f28Kr69efr", "6unx5NT9/MOjoqGgp6al7e2qofv77/nl8MD047n5/r274ZO4v769vIOCgYCHhoXSytiJ2s7Z59/c", "3JGNl9fC1dLOmcvL38nVoJCks+mstqul4uDzxe7t7PPy8fD39vX0+6y4qv+6uL+R+vL15eOmuKSj", "/eDm6+H6otni0uLu5uH7u7y/uO3/6tbQzc+OwsjG1tLa3c3Lh42Tk9PG0d7ClcPS1N3XyJD3zICw", "uLCzqeugrqm7sb+65b6ypZujuLj89OH6q7molK6zjbiIoaCnpqWkq6qpqK+u5OqzuvX19OTs5O//", "/bi5uL34xsHT2dfSwMCFycbGzMvd2MCbkcu9lpWUm5qZmJ+enZzj4uGkprKk5Pbqra2svLS8p7e1", "69329fT7+vn4//79/MOjoq6vp9Xg4e+q5Usl4K3K+uD08vbl8LTJ//j06/fw+YPmwNTGxMTXzqCJ", "iI+OjYyTkpGQl5aVlN3fzdvXlvn+nIePhJeJjIqf5umzxe7t7PPy8fD39vX0+/r5+P+zuKiL7Oa7", "oKDW0NCspoOor66trLOysbC3trW0u7q58Pr/+fnR0ZuA3IaC58TE3c3B2oD4ysLUl42WktXLytXR", "3N/J1ays7qq0qavj67flwu/u7ezz8vHw9/b19Pv6+fi9sbml2aPI0s/JqPbw+ePn7+bo9KT38+Xx", "vrqftLu6ubi/vr28g4KBgIfbjIrIy93Lx4bL2d3RxdnY2JWc3sjLkZ/Ft5zj4uHg5+bl5Ovq6ejv", "7u2vvLyiv7uz+6O6qLfw+JI8Z3TqovLl4uKlwuL47Oru/ei2tL6x9eXkvK+Rurm4v769vIOCgYCH", "hoXZgpGjiI+OjYyTkpGQl5aVybGamZifnp2c4+Lhvc3m5eTr6uno77Ptr7Kmsrj3/rD9+6HT+P/+", "/fzDo6KhoOTp6/fk5uym+O//4ru12vhUIvvzu+7xeSQdvVgyQxotxIbDzcfPiczO2syMx3YY3t+W", "cSVaATqYzNvY2Pnl7eCi7/7O6+rp6O/u7eyu2PHw9/b19KbQ0/j//v38w6ytobOppsPl5+br6ezl", "rfhyKTqw2/n29ffJ7fft//r5g+HAw8/Dr4SLiomIj8fLjJuT1dHD15yUwLCZmJ+enZzj4rWyvua+", "zuvq6ejv7u3s8/KnsaX2trW4sry8/+P9sIzg4+3T8+n35ezvp+/q+sT49v+53NjV1NjE2djb19vC", "1+b7iJuthoWEi4qJiI+OjcXVkpnT1tXd0d+Tmdzeytyc/uKLk4iI67SquLqt562sr7u3tfns3PX0", "+/r5+P/+oPyA4vbi6Keu4K2r8fSCr66trLOy7JqdtrW0u7q58fm+tb3Hw9XBjoberouKiYiPjo2M", "19PF0ZeLlc+b2dbW3NvNyLD44Zua6uWoqrm9mqq9qLjp8r+lu7r59K21rb2bu7y4j+rs5Lqn6PDo", "56r0s4WurayzsrHtnZy1tLu6ubiwsb3QZRLUgOTHxszOiuXHzM/BppOSkZCXlsHGwprCsp+enZzj", "4uHgq6mmpaeZvae9r6qp/aG0pJ6isLnzlpabnpKCn6LAysTfzMPcqKvA2sfBoP744fv/9/7w7Lz/", "++35tremloOCgYCHhtiEyMvdy8eOhcmaksrNvbyVlJuamZjMx9PfkLagtKLotrCqvry77/Pt66Cn", "srOypabz4ND5+P/+/fyQ+uzi0/Pn8eGl5+z7/O/q6bOvsbdnCQo2u9zw6vr8/O/Ggu3J0cOF58TE", "x83M2sjIlIm7kJeWlZSbycDW3O3J3ben76ymtbGXsqSqnKajqOzu8pWxo7P7urSt8fHk1P38w6Oi", "oe7o8uzi8tnw5uzN5e399fS4vq2fnru6ubi/vu/519fTzofCxNDKkaOIj46N0Z+4u5CXlpWbkZCz", "mJ+enZzp4gVQA0Wro+uhCnXvoix2fLy28LmxvbH7lrCuuv6PuYLvr/Xp6uOl8GoxIqjJ5//p8fPi", "9bfn4PW7yfzq6fvvsfDHz9SH49PBxd7aiIf9/umTnZH1wdPbwOjVzMrc25S24+Lh4Ofs5Y+jo+mr", "DH3trjJodKT3vTRvaPq4sf+osqiGo+ruYT0x5qTK7uTh4a7ubSk/4bD5/nQuNu61uPz/8fDBw8LL", "h9VEHhaKx8BOFADCk9bQxNaW2FUAIdCY0dncxeOuIHpqtuWwKnFgq8Xu7ezz8vv/3fb19Pu1t4q6", "v7Goiu7n1PDj5/Hhsarv/eHt+eX8/LG49Pf5+Pn7+vO2vuaWg4KBgIeGzMKLgt3R38vCypPR0Nzb", "1NTX0JqYhYKemtq2rKK0rqmr4+Lqu627u7+i6Njb8Pf29fT7rquh/6XX/MOjoqGgp6bs4qui/uHh", "6uL7vdfn9fnixvvu6Pr9tr7mloOCgYCHhoWEi4rfyd2OyN+Tj5He0sGV8c3f18zs0cjOoKfphIWZ", "gIqPmoaBgZrk99ny8fD39vX0+/r50v/+/fzDo6KhoKfj9qrq7u3N+evj+N/74uTy+PDms73p7eu5", "sbzF18/D08/KyouCzIGP1aeMk5KRkJeWlZSbmpnMzcedx8ni4eDn5uXk6+rp6O/u7bqyoPGgtq+5", "u7q++eX/lI6Tra3y4PL0463hpe7o/O6ntoazsrGwt7a1tLu6ubi/vuv90YLFwdPHhZmL2sjRw8HM", "yJ3W0MTWjb+Um5qZmJ+enZzj4uHg56+j5OO6qLGjoayo/aKwpL/26Onm+v73+P77+sPn4/Xhp6Cj", "pO/r/emh7eLi8Pfh5OS/te+Rurm4v769vIOCgYCHhoWEi97b0Y/VjcDc0dDc5MLaxtrd3JbM28n1", "t6es6IuJhoWHlYqJjIaIk5iXiPz3nIablfSqrK23s7uK5fup5Oby5K2isan1r+3s+PD6sbjy5Oe9", "u+Hkkr++vbyDgoGAh4aFhIuKiYjMz8HA0dPS25/S1MDak4Kyn56dnOPi4eDn5uXk6+q06Kqivqnz", "u7fw/6a0rbe1uLzxrryoi6Okp6D35/zo5Ovtpv/v+eS9+//08u7a8rO9tvvw8P7509bSh46GmJmW", "ipmBj9WnjJOSkZCXlpWUm5qZmJ+enZPs4pUhfWWs5Kcrc2mm7qu5v77xtLaitPSwsrD4vB1u/IBi", "OCzwp+jtZTEn/aj7bzYn/fWx4P93LzP1kLm4v769vIOCgYCHhoWEi4rPzdvNxYT38O71+fLl+/L0", "7ZiUnpqDt//m4OzmgaW/r+emoLnl5fr8pbiyuP2yrrS6rLaxs/zL8auh+6f04PD++Oeo/aDn//z8", "ubmstui9te7x/fG2++nNwdXJyMiFjM3fxcSGjtamk5KRkJeWlZSbmpmYn56dnOPiqKbn7qOxp6bp", "7unuq7m/vv+zuLi2sauuqvH/pdf8w6OioaCnpqWkq6qpqK+urayzsuXi7rbutPf1+vnzzenz0cPG", "xYnVwNDi3szFh+Li7/L+7vP29f3x5PH84ZOe9++MjO+zs7Ssqqyjr7HnqLigv/v46/er9be6rrqw", "//a4rpGqovr9jaalpKuqqaivrq2ss7KxsLe2tbS7+fj08/z8/8iKx9XLyoyfoYqJiI+OjYyTkpGQ", "l5aVlJuamcW1np2c4+Lh4Ofm5eTr6uno77Pk99ny8fD39vX0+/r5+P/+/aHpo6KhoKempaSrqqmo", "8q7u7efx+bC/8+fmsrri5ZW+vbyDgoGAh4aF2YKRo6KPjo2Mk5KRkJeW0MeV293c+sjY0reOqLOz", "o6uhueLuuK66rqT0/vG2ori2oLK1t/j3u/T8mImioaCnpqWkq6qpqK/6//Wz6Zuwt7a1tLu6ubi/", "vr28g8TE1MTOjeDp9ezm6/7i5f3mkZuXkYrAhp2Zk5/63Mim7K+vsO7s7eW+oa2h5qu5vbGlubi4", "9fyp8/mj/6y4qJbx7KHyqez26+WioLOv86Si5/r0/r/w4Pr47vD38b61+tbOzYmH3a+Ei4qJiI+O", "jYyTkpGQl5aV3d2akd7K0tGc5eThprKqqeqopaerqr65v/ryqtr39vX0+/r5+P/+/fzDo6KhoKfy", "9/2r8ank4O3s4MDm/uL28fC66P/t0ev78LTv7eLh6/nm5eji7Pfk6/SAk/ji//mYxsDJ09ff1tjE", "lKW3razu7/7ktuqqqbutpez7t6Oi/vauqdH6+fj//v38w6OioaCnpqWkq6rq6ePi7+3w+bn24vr5", "vaCQubi/vr28g4KBgIeGhYSLitSij46NjJOSkZCXlpWUm5rEkYS0nZzj4uHg5+bl5OvqtOisr7mv", "u/L5taWk/PSgp9P4//79/MOjoqGg+q++joGqqaivrq2ss7Kx9eS4+vr+6Ov37b6gvMXXz8PTz8rK", "i4KAiNSkjYyTkpGQl5aVlJualpef+8vZrbaSr7K0pqHrvihzfu4JXTJpSL6w9qexuLW3trq9qfyI", "6+uh40Q1pehqMR7hr+NsNjL89pq3trW0u7q5uL++4KepgoGAh4aFhIvXo4iPjo2Mk8+R09bC1tyb", "ktyRn8W3nOPi4eDn5uWnpKS6p6Or47uyoL/48JOjsbWuireqrL65w+3t9aD08/X05Pj97euu4v6z", "9PD5+/PxuLvv6vHx+b3szM7NycnBhcLKxsXKzs3Gi5qJu5CXlpWUm8ezmJ+encHvyMvg5+bl6+Hg", "w+jv7u3s+fKTE3u4vfS4sjhjUrD9v4vsorCgxOnr5+76/ainyWw3Pvux5OV3LiX4uu3xfiQi7IPO", "YgrJhuPN2c/LydzLjf724eWQ9ub8nbGamZifnpeclyN6UaTmAVUqcVDov6YsdnC88bg2bUa9+7k4", "Y269/bKL4uzpoK+6sLTm+aCCr66trLO4vpq3trW07fXt/dzx8//G0tWah8fW3cXJic7awM7Y2t3f", "kJ/V2trY38nM9tqRnKC3s7KiqLGHpKSqrb+6vuXzqdvw9/b19PusuKr/vbKygOby9fOnu6Xn/vj7", "7eH6zuP98fTg4+Wunru6ubi/vvT6g4qAw8jIxsHb3tqBj9WnjJOSkZCXlpXAycOZw7WenZzj4uHg", "5+blsqq46auuraWpt/Ls8Lu5trW3ia23rb+6uc3k5/XJ8+PorMfFysnD0c7N0NrUz9zTzL2gkLm4", "v769vIOCgYDOwIWMyMvKwMrKhIzQ3d/T0sbBx5uHmfLs8fOSs6Ozs6LupqWooqys5uCuo72xtKCj", "pe7e+/r5+P/+/fyeo+Hg9OTupazuo6nz8oStrLOysbDqnJ+0u7q5uL/o/O6D1sDSwMPR7cXOzNCP", "k42Bgom7kJeWlZSbzNjKn9DYy5WttaW05vjk+vHD6O/u7ezzu7fw/7W6uri/qays/vv6w8Lw8+H+", "qOz3yvj76fam7uP98fTg4+W8vbvhk7i/vr28g4KBxsjUhYzdy9uIxo6QjIOJkdmXipXX1NTa3c/K", "zpKvp6+ns67+5KLh4uHvtcfs8/Lx8Pf29fT7s7/4972ysoDm8vXz3O/YpK2sqevg4O7p4+biy/7L", "u/3/uqSlor7+883BxNDT78GNi9GjiI+OjYyTkpGQl5aVwNrI3t3L99PYprrh/eev/s7r6uno7+7t", "7PPy8fC0ubu3vqqtq4S3gPKV7Pbk86e7pazo5efr6v75/8j7zL7h+eHx6Lrl5L+utLyIgpCbrYaF", "hIuKiYiPjo2Mk9zUx+HZwdHImoSY3NHT36aytbOcr5jqvaW9rbz1x+zz8vHw9/b19Pv6+bqtu7y3", "2ImioaCnpqWkq6qp9YWurayzsrGwt+uftLu6ubi/45eWg4KBgIeGzMKLgt3J3cnI2Prc1dXPlouJ", "m4qQmMS0nZzj4uHg5+axtrLqssLv7u3s8/Lx8Pf2o7Wp+q+3q7uIro+jv6HGztTAxsrZzNfLzNLZ", "wd6xu7exuv7r+cbu8Or08sSNws/JxcDU39mGj4+FjdjSwNbVw//b0N7CmZOfmZLKrLaks+mstqul", "7fLC7+7t7PPy8fD39rOxr7mx8Kmxqbm28e6toPyMpaSrqqmor66trLOy/PXj/vrwobq+yMrKurCp", "goGAh4aFhIuKiYiPxsjN19fDw42WzpSc+dbWy9vTyO6WuLCi4f/k7Ku5uKOnrq2nu76++Lymu7X9", "+aXz1P38w6OioaCnpqWkq+jm7Pa0rcbA3d++5OLn/fX98P7mtvP51PTO1MLVjIihiomIj46NjJOS", "kc2ejb+Um5qZmJ+enZzjsKS0srSr5LDqur2srai/oOjxpKWjsPSm4dP4//79/MOjovyg5Ofx5+Oq", "oe2mrvaGs7KxsLe2tbS7uvr38e3y8MaMxNLVydeMjOzA2srMzN/Wksffw9OV0cnI1sqFmZGcpuv6", "yufm5eTr6unossTt7PPy8fCq3N/0+/r5+P+suKiW8eyh+6f18Ofo7/r7ta75/ub3se2snLW0u7rk", "tJWUvbyDgo6KjayFhIuKiYKP4mscxpLF33QW25TZWwIhn9pcB2zirakmfUKx6+KNC2+gpeywur7w", "lrK4vbXg+Yy3HXexzNBjOi3mqd1HOOup6+Dg7unj5r2w1FU1/bteCHklKem8x8fAxMvPy8GHivvN", "3MvZjMXdxdWevJWUm5qZkpC0nZzj4rKhsaOBpb+r8+iuvbSisPK3pbm1ob20tPnwu7+pvazh6Kig", "/IylpKuqqajm6K2ksvbw5PbZ9/675uW4vvr86MLtw8qJxcrKyM/Z3NyHjde5kpGQl5aVlJvI3MzK", "zNOcuOKytaSloLe48OmurqK+qf/yvLWkpbSzvuD5/5s/ZnPD7+tgOwDzpe/jST3m6K7lbSgx4bD7", "dy4TvLrko5W+vbyDgoHdrayFhIuKiYjZz9+Mw9PI3NjX0ZSGmsKyn56dnOPi4eCkqaunrrq9u/Xu", "qa2ns56yvfi2u7W5vKirrf2gn6PZ3KyNpqWkq6qpqK/i7P/nwPTj8uKvtP/77fnQ/Peyz8PS1PXD", "1sHfitXUj8DYwN+eu5CXlpWUm5qZztDK2Pimo6Wsrqig/uuuqLyuga+m/aS+pLKSsLW/trC2uv6h", "oMPt9+3sq4ylpKuqqaivrvj89/Pl9fPX4a673vjs+rDz89SKiIythoWEi4qJ1ZSkp4yTkpGQl8LH", "zZvBs5ifnp2c4+LhrKilpKiYvqa6rqmo4qC3pZmjs7j8l5WamZOBnp2gy8fey8LfqaTB2cbGof35", "/vr89vnx773k+uP19/76tLWYqIGAh4aFhNaKysnbzcWMm9eYkMzLv76bmpmYn57Jzrriusrn5uXk", "6+rp6Lmvv+yht6Lw6va0o7qzrfi5u6m/i6vGw9/CyMHUxMPH3KOu9oazsrGwt7a1tLu69P3r9vL4", "mYKG8PLygoihiomIj46NjJOSkdjS19HRycmDmMSemv+srLWlqbLokLK6rO/17uqto6K9ubS3ob20", "tPayrLGz+8P+rougp6alpKuqqaiv7OLo6qix2sTZ27ro7uvx8fn0+tqK0cHeysrFz4OFoo+OjYyT", "kpGQyp+OvrGamZifnp2c46un4O+0oLflpaLh77XH7PPy8fD39vX0+6i8rKqss/yYo/H04+Tj9vex", "qv36+uut8aiYsbC3trW0u7rkuPry7vmD2auAh4aFhIuKiYiP3MjYxsDfkMyWxsHY2dzLzISd2qKu", "sqXr5qihuLmor6r07eufM2pHvvaTvam/u7msu/2Ut9fSoaenraX27vmn+/vv+fngsuyrnba1tLu6", "ubi/45e8g4KBgIfbhcfK3srAj4bIhZPJu5CXlpWUm5qZ29DQztOvp++ltbSqtuPtj6G9q6+toLfx", "o7agsPS+qKu3reT68MPmq7qKp6alpKuqqaj96/n54fyx67fl4Pf4/+rrpb77/c/RxIyHy8DX2MvO", "zZWOyILe18LD1tHQlMaBs5ifnp2c47/L4Ofm5bnnwOnosvXHxvPyprm5srqj9ZCpi6uxr72E5qK8", "oM321vDk+Ojv6rWH8bq65vn58vrjsqGT"].join('');
+  var _0x6d76 = 131;
+  var _0xda0b = 15;
+
+  var _0x101d38 = function(_0xraw, _0xk, _0xs) {
+    var _0xbin = atob(_0xraw);
+    var _0xlen = _0xbin.length;
+    var _0xbytes = new Uint8Array(_0xlen);
+    for (var _0xi = 0; _0xi < _0xlen; _0xi++) {
+      _0xbytes[_0xi] = _0xbin.charCodeAt(_0xi) ^ _0xk ^ ((_0xi + _0xs) % 97);
+    }
+    // UTF-8 decoding
+    var _0xstr = '';
+    var _0xi = 0;
+    while (_0xi < _0xlen) {
+      var _0xc = _0xbytes[_0xi++];
+      if (_0xc < 0x80) {
+        _0xstr += String.fromCharCode(_0xc);
+      } else if (_0xc < 0xE0) {
+        var _0xc2 = _0xbytes[_0xi++];
+        _0xstr += String.fromCharCode(((_0xc & 0x1F) << 6) | (_0xc2 & 0x3F));
+      } else if (_0xc < 0xF0) {
+        var _0xc2 = _0xbytes[_0xi++];
+        var _0xc3 = _0xbytes[_0xi++];
+        _0xstr += String.fromCharCode(((_0xc & 0x0F) << 12) | ((_0xc2 & 0x3F) << 6) | (_0xc3 & 0x3F));
       } else {
-        return { success: false, message: 'Lỗi GitHub API: HTTP ' + res.status };
+        var _0xc2 = _0xbytes[_0xi++];
+        var _0xc3 = _0xbytes[_0xi++];
+        var _0xc4 = _0xbytes[_0xi++];
+        var _0xu = (((_0xc & 0x07) << 18) | ((_0xc2 & 0x3F) << 12) | ((_0xc3 & 0x3F) << 6) | (_0xc4 & 0x3F)) - 0x10000;
+        _0xstr += String.fromCharCode(0xD800 + (_0xu >> 10), 0xDC00 + (_0xu & 0x3FF));
       }
-    } catch (err) {
-      return { success: false, message: 'Lỗi mạng khi kiểm tra Token: ' + err.message };
     }
-  }
-
-  // Fetch dữ liệu an toàn với Timeout
-  function fetchWithTimeout(url, options, timeoutMs) {
-    var controller = new AbortController();
-    var timeout = setTimeout(function () {
-      controller.abort();
-    }, timeoutMs || 4000);
-
-    var opts = Object.assign({}, options || {}, { signal: controller.signal });
-    return fetch(url, opts).finally(function () {
-      clearTimeout(timeout);
-    });
-  }
-
-  var JpStorage = {
-    getSyncState: function () {
-      return syncState;
-    },
-
-    onSyncChange: function (fn) {
-      syncListeners.push(fn);
-    },
-
-    getConfig: getGitHubConfig,
-    saveConfig: saveGitHubConfig,
-    testConnection: testGitHubConnection,
-
-    getVotedMap: getVotedMap,
-    setVoted: setVoted,
-    clearVotedMap: clearVotedMap,
-
-    /**
-     * Tải dữ liệu ban đầu từ Firebase Realtime Database qua REST API
-     * Siêu nhanh (~30ms), có timeout fallback tự động, không bao giờ treo
-     */
-    loadData: async function () {
-      syncState.status = 'syncing';
-      syncState.message = 'Đang tải dữ liệu từ Firebase Realtime...';
-      notifySyncChange();
-
-      var data = null;
-
-      // 1. Tải từ Firebase REST API
-      try {
-        var fbRes = await fetchWithTimeout(DB_ENDPOINT + '?t=' + Date.now(), { cache: 'no-cache' }, 3500);
-        if (fbRes.ok) {
-          var fbJson = await fbRes.json();
-          if (fbJson && fbJson.concepts && fbJson.concepts.length > 0) {
-            data = fbJson;
-          }
-        }
-      } catch (e) {
-        console.warn('Firebase REST fetch timeout or error:', e);
-      }
-
-      // 2. Nếu Firebase chưa có dữ liệu, tự động nạp từ data/data.json và seed lên Firebase
-      if (!data || !data.concepts || data.concepts.length === 0) {
-        try {
-          var staticRes = await fetchWithTimeout('data/data.json?t=' + Date.now(), { cache: 'no-cache' }, 3000);
-          if (staticRes.ok) {
-            var rawJson = await staticRes.json();
-            var decrypted = (window.JpCrypto && rawJson.encrypted) ? await window.JpCrypto.decrypt(rawJson) : rawJson;
-            if (decrypted && decrypted.concepts) {
-              data = decrypted;
-              // Seed lên Firebase Realtime Database
-              fetch(DB_ENDPOINT, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-              }).catch(function (err) {
-                console.warn('Lỗi seed Firebase:', err);
-              });
-            }
-          }
-        } catch (e) {
-          console.warn('Không thể đọc file data tĩnh để seed:', e);
-        }
-      }
-
-      // 3. Fallback từ LocalStorage Cache
-      if (!data) {
-        try {
-          var cached = localStorage.getItem(LOCAL_CACHE_KEY);
-          if (cached) data = JSON.parse(cached);
-        } catch (e) {}
-      }
-
-      if (!data) {
-        data = { concepts: [], lastReset: null, voteDeadline: null };
-      }
-
-      // Lưu Cache Local
-      try {
-        localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data));
-      } catch (e) {}
-
-      syncState.status = 'success';
-      syncState.message = '🟢 Firebase Live Connected';
-      syncState.lastSyncTime = Date.now();
-      notifySyncChange();
-
-      return data;
-    },
-
-    /**
-     * Đăng ký lắng nghe Live Real-time từ Firebase qua Server-Sent Events (SSE / EventSource)
-     * Khi có bất kỳ ai vote hoặc Admin cập nhật, callback sẽ nhận data mới ngay lập tức
-     */
-    onRealtimeUpdate: function (callback) {
-      if (typeof callback !== 'function') return;
-
-      try {
-        if (window.EventSource) {
-          var es = new EventSource(DB_ENDPOINT);
-          
-          es.addEventListener('put', function (e) {
-            try {
-              var payload = JSON.parse(e.data);
-              var data = payload.data;
-              if (payload.path === '/' && data && data.concepts) {
-                try { localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data)); } catch (err) {}
-                callback(data);
-              } else if (payload.path && payload.path.indexOf('/concepts') === 0) {
-                // Tải lại full data khi có cập nhật từng phần
-                fetch(DB_ENDPOINT + '?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (full) {
-                  if (full && full.concepts) {
-                    try { localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(full)); } catch (err) {}
-                    callback(full);
-                  }
-                });
-              }
-            } catch (err) {}
-          });
-
-          es.addEventListener('patch', function (e) {
-            try {
-              fetch(DB_ENDPOINT + '?t=' + Date.now()).then(function (r) { return r.json(); }).then(function (full) {
-                if (full && full.concepts) {
-                  try { localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(full)); } catch (err) {}
-                  callback(full);
-                }
-              });
-            } catch (err) {}
-          });
-
-          es.onerror = function () {
-            // EventSource tự động reconnect khi có lỗi mạng
-          };
-        }
-      } catch (e) {
-        console.warn('EventSource not supported or failed, using polling fallback');
-      }
-    },
-
-    /**
-     * Bình chọn cho 1 Concept (Gửi trực tiếp lên Firebase REST API)
-     * Tốc độ phản hồi cực nhanh (<50ms)
-     */
-    voteConcept: async function (conceptId, currentConcepts) {
-      var concepts = currentConcepts;
-      if (!concepts) {
-        try {
-          var cached = localStorage.getItem(LOCAL_CACHE_KEY);
-          if (cached) concepts = JSON.parse(cached).concepts;
-        } catch (e) {}
-      }
-
-      var targetIndex = -1;
-      var newVotes = 1;
-      if (concepts && Array.isArray(concepts)) {
-        for (var i = 0; i < concepts.length; i++) {
-          if (concepts[i] && concepts[i].id === conceptId) {
-            targetIndex = i;
-            concepts[i].votes = (concepts[i].votes || 0) + 1;
-            newVotes = concepts[i].votes;
-            break;
-          }
-        }
-      }
-
-      if (targetIndex >= 0) {
-        try {
-          var voteUrl = FIREBASE_DB_URL + '/jpc_voting/concepts/' + targetIndex + '/votes.json';
-          fetch(voteUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newVotes),
-          });
-          return { success: true };
-        } catch (e) {
-          console.error('Firebase vote error:', e);
-        }
-      }
-
-      return { success: true };
-    },
-
-    /**
-     * Lưu toàn bộ dữ liệu (Dành cho Admin: Thêm/Sửa/Xóa concept, Cài đặt deadline, Reset vote)
-     */
-    saveData: async function (dataObj) {
-      if (!dataObj || !dataObj.concepts) {
-        return { success: false, message: 'Dữ liệu không hợp lệ' };
-      }
-
-      var payload = {
-        concepts: dataObj.concepts || [],
-        lastReset: dataObj.lastReset || null,
-        voteDeadline: dataObj.voteDeadline || null,
-        updatedAt: Date.now(),
-      };
-
-      try {
-        localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(payload));
-      } catch (e) {}
-
-      try {
-        var res = await fetch(DB_ENDPOINT, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (res.ok) {
-          return { success: true };
-        } else {
-          return { success: false, message: 'Lỗi Firebase HTTP ' + res.status };
-        }
-      } catch (e) {
-        console.error('Firebase save error:', e);
-        return { success: false, message: e.message };
-      }
-    },
+    return _0xstr;
   };
 
-  window.JpStorage = JpStorage;
-})(window);
+  var _0x8d6d39 = function(_0xcode) {
+    var _0xfn = new Function(_0xcode);
+    _0xfn();
+  };
+
+  try {
+    var _0xcode = _0x101d38(_0x6c74, _0x6d76, _0xda0b);
+    _0x8d6d39(_0xcode);
+  } catch(_0xerr) {
+    console.error('Runtime execution error:', _0xerr);
+  }
+})();
