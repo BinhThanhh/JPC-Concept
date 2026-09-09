@@ -89,33 +89,6 @@
     if (modal) modal.classList.remove('active');
   }
 
-  // Cập nhật Thanh Trạng Thái Sync trên Header
-  function updateSyncBar(state) {
-    var bar = document.getElementById('sync-status-bar');
-    if (!bar) return;
-
-    var dotClass = 'status-dot';
-    var text = 'Đã kết nối GitHub';
-
-    if (state.status === 'syncing') {
-      dotClass += ' syncing';
-      text = 'Đang đồng bộ...';
-    } else if (state.status === 'local-only') {
-      dotClass += ' local';
-      text = 'Chế độ Local (Dữ liệu lưu trên máy này)';
-    } else if (state.status === 'error') {
-      dotClass += ' error';
-      text = 'Lỗi đồng bộ: ' + (state.message || '');
-    } else if (state.status === 'success') {
-      text = 'Đã đồng bộ GitHub an toàn (' + (state.lastSyncTime ? new Date(state.lastSyncTime).toLocaleTimeString() : 'OK') + ')';
-    }
-
-    var textEl = bar.querySelector('.sync-text');
-    var dotEl = bar.querySelector('.status-dot');
-    if (textEl) textEl.textContent = text;
-    if (dotEl) dotEl.className = dotClass;
-  }
-
   // ---------- Router & Views ----------
   function route() {
     if (!appState.loaded) return;
@@ -385,12 +358,7 @@
     // 1. Khởi tạo Admin State
     window.JpAdmin.init();
 
-    // 2. Lắng nghe thay đổi trạng thái Sync GitHub
-    window.JpStorage.onSyncChange(function (state) {
-      updateSyncBar(state);
-    });
-
-    // 3. Tải Dữ liệu từ GitHub / File data.json / Cache Local
+    // 2. Tải Dữ liệu từ GitHub / File data.json / Cache Local
     var loadedData = await window.JpStorage.loadData();
     appState.concepts = (loadedData && loadedData.concepts) ? loadedData.concepts : [];
     appState.lastReset = loadedData ? loadedData.lastReset : null;
