@@ -1,0 +1,376 @@
+/**
+ * yourJPconcept - Storage & GitHub Sync Module
+ * Quản lý lưu trữ dữ liệu, mã hóa bảo mật và đồng bộ hai chiều với GitHub Repository.
+ */
+
+(function (window) {
+  'use strict';
+
+  var DEFAULT_GITHUB_OWNER = 'BinhThanhh';
+  var DEFAULT_GITHUB_REPO = 'JPC-Concept';
+  var DEFAULT_GITHUB_BRANCH = 'main';
+  var DEFAULT_DATA_PATH = 'data/data.json';
+
+  var LOCAL_CACHE_KEY = 'yjp_data_cache';
+  var LOCAL_VOTED_KEY = 'yjp_voted_map';
+  var LOCAL_CONFIG_KEY = 'yjp_github_config';
+
+  // Trạng thái đồng bộ hiện tại
+  var syncState = {
+    isSyncing: false,
+    lastSyncTime: null,
+    status: 'idle', // 'idle' | 'syncing' | 'success' | 'error' | 'local-only'
+    message: '',
+    githubSha: null,
+  };
+
+  var listeners = [];
+
+  function notifySyncChange() {
+    listeners.forEach(function (fn) {
+      try {
+        fn(syncState);
+      } catch (e) {
+        console.error(e);
+      }
+    });
+  }
+
+  // Lấy cấu hình GitHub từ LocalStorage
+  function getGitHubConfig() {
+    try {
+      var raw = localStorage.getItem(LOCAL_CONFIG_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        return {
+          owner: parsed.owner || DEFAULT_GITHUB_OWNER,
+          repo: parsed.repo || DEFAULT_GITHUB_REPO,
+          branch: parsed.branch || DEFAULT_GITHUB_BRANCH,
+          path: parsed.path || DEFAULT_DATA_PATH,
+          token: parsed.token || '',
+          autoSync: parsed.autoSync !== false,
+        };
+      }
+    } catch (e) {}
+
+    return {
+      owner: DEFAULT_GITHUB_OWNER,
+      repo: DEFAULT_GITHUB_REPO,
+      branch: DEFAULT_GITHUB_BRANCH,
+      path: DEFAULT_DATA_PATH,
+      token: '',
+      autoSync: true,
+    };
+  }
+
+  // Lưu cấu hình GitHub vào LocalStorage
+  function saveGitHubConfig(cfg) {
+    var merged = Object.assign(getGitHubConfig(), cfg);
+    localStorage.setItem(LOCAL_CONFIG_KEY, JSON.stringify(merged));
+    return merged;
+  }
+
+  // Kiểm tra kết nối GitHub API với Token
+  async function testGitHubConnection(cfg) {
+    var config = cfg || getGitHubConfig();
+    if (!config.token) {
+      return { success: false, message: 'Chưa nhập GitHub Personal Access Token.' };
+    }
+
+    try {
+      var res = await fetch('https://api.github.com/repos/' + config.owner + '/' + config.repo, {
+        headers: {
+          Authorization: 'Bearer ' + config.token.trim(),
+          Accept: 'application/vnd.github.v3+json',
+        },
+      });
+
+      if (res.status === 200) {
+        var data = await res.json();
+        return {
+          success: true,
+          message: 'Kết nối thành công tới repo ' + data.full_name + ' (Quyền: ' + (data.permissions ? (data.permissions.push ? 'Push OK' : 'Read only') : 'OK') + ')',
+          repo: data,
+        };
+      } else if (res.status === 401) {
+        return { success: false, message: 'Token không hợp lệ hoặc đã hết hạn (401 Unauthorized).' };
+      } else if (res.status === 404) {
+        return { success: false, message: 'Không tìm thấy repository hoặc Token không có quyền truy cập repo này (404 Not Found).' };
+      } else {
+        return { success: false, message: 'Lỗi GitHub API: HTTP ' + res.status };
+      }
+    } catch (err) {
+      return { success: false, message: 'Lỗi mạng khi kết nối GitHub: ' + err.message };
+    }
+  }
+
+  // Tải SHA hiện tại của file trên GitHub để commit đè an toàn (tránh 409 Conflict)
+  async function fetchFileSha(config) {
+    if (!config.token) return null;
+    try {
+      var url = 'https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/' + config.path + '?ref=' + config.branch + '&t=' + Date.now();
+      var res = await fetch(url, {
+        headers: {
+          Authorization: 'Bearer ' + config.token.trim(),
+          Accept: 'application/vnd.github.v3+json',
+        },
+      });
+      if (res.status === 200) {
+        var data = await res.json();
+        syncState.githubSha = data.sha;
+        return data.sha;
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  // Push file mã hóa lên GitHub repository
+  async function pushEnvelopeToGitHub(envelope, commitMessage) {
+    var config = getGitHubConfig();
+    if (!config.token) {
+      syncState.status = 'local-only';
+      syncState.message = 'Chưa cấu hình Token GitHub — dữ liệu đang lưu trong bộ nhớ máy (Local).';
+      notifySyncChange();
+      return { success: false, reason: 'no-token' };
+    }
+
+    syncState.isSyncing = true;
+    syncState.status = 'syncing';
+    syncState.message = 'Đang đẩy dữ liệu mã hóa lên GitHub repo...';
+    notifySyncChange();
+
+    try {
+      // Lấy SHA mới nhất trước khi commit
+      var sha = await fetchFileSha(config);
+
+      var jsonString = JSON.stringify(envelope, null, 2);
+      // Mã hóa UTF-8 sang Base64 chuẩn cho GitHub Contents API
+      var utf8Bytes = new TextEncoder().encode(jsonString);
+      var binaryStr = '';
+      for (var i = 0; i < utf8Bytes.length; i++) {
+        binaryStr += String.fromCharCode(utf8Bytes[i]);
+      }
+      var base64Content = window.btoa(binaryStr);
+
+      var bodyData = {
+        message: commitMessage || 'Update concepts and votes [skip ci]',
+        content: base64Content,
+        branch: config.branch,
+      };
+      if (sha) {
+        bodyData.sha = sha;
+      }
+
+      var url = 'https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/' + config.path;
+      var res = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          Authorization: 'Bearer ' + config.token.trim(),
+          Accept: 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bodyData),
+      });
+
+      if (res.ok) {
+        var resData = await res.json();
+        syncState.githubSha = resData.content ? resData.content.sha : null;
+        syncState.isSyncing = false;
+        syncState.status = 'success';
+        syncState.lastSyncTime = new Date();
+        syncState.message = 'Đã đồng bộ an toàn lên GitHub (' + config.owner + '/' + config.repo + ')';
+        notifySyncChange();
+        return { success: true };
+      } else {
+        var errBody = await res.json().catch(function () { return {}; });
+        syncState.isSyncing = false;
+        syncState.status = 'error';
+        syncState.message = 'Lỗi đẩy GitHub (HTTP ' + res.status + '): ' + (errBody.message || '');
+        notifySyncChange();
+        return { success: false, error: errBody };
+      }
+    } catch (err) {
+      syncState.isSyncing = false;
+      syncState.status = 'error';
+      syncState.message = 'Lỗi kết nối GitHub: ' + err.message;
+      notifySyncChange();
+      return { success: false, error: err };
+    }
+  }
+
+  // Helper tải dữ liệu ban đầu
+  async function fetchRemoteData() {
+    var config = getGitHubConfig();
+
+    // 1. Thử lấy từ GitHub Raw hoặc API nếu có token
+    if (config.token) {
+      try {
+        var apiUrl = 'https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/' + config.path + '?ref=' + config.branch + '&t=' + Date.now();
+        var apiRes = await fetch(apiUrl, {
+          headers: {
+            Authorization: 'Bearer ' + config.token.trim(),
+            Accept: 'application/vnd.github.v3+json',
+          },
+        });
+        if (apiRes.ok) {
+          var fileData = await apiRes.json();
+          syncState.githubSha = fileData.sha;
+          // Giải mã content base64
+          var decodedContent = decodeURIComponent(escape(window.atob(fileData.content.replace(/\s/g, ''))));
+          var rawJson = JSON.parse(decodedContent);
+          var decrypted = await window.JpCrypto.decrypt(rawJson);
+          if (decrypted && decrypted.concepts) {
+            syncState.status = 'success';
+            syncState.message = 'Đã tải dữ liệu mới nhất từ GitHub';
+            syncState.lastSyncTime = new Date();
+            notifySyncChange();
+            return decrypted;
+          }
+        }
+      } catch (e) {
+        console.warn('Không thể tải qua GitHub API, thử tải file local:', e);
+      }
+    }
+
+    // 2. Thử tải file tĩnh data/data.json đi kèm trang web
+    try {
+      var staticRes = await fetch('data/data.json?t=' + Date.now());
+      if (staticRes.ok) {
+        var rawStaticJson = await staticRes.json();
+        var decryptedStatic = await window.JpCrypto.decrypt(rawStaticJson);
+        if (decryptedStatic && decryptedStatic.concepts) {
+          return decryptedStatic;
+        }
+      }
+    } catch (e) {
+      console.warn('Không thể tải data/data.json tĩnh:', e);
+    }
+
+    // 3. Lấy từ Cache LocalStorage
+    try {
+      var cached = localStorage.getItem(LOCAL_CACHE_KEY);
+      if (cached) {
+        var parsedCache = JSON.parse(cached);
+        if (parsedCache && parsedCache.concepts) {
+          return parsedCache;
+        }
+      }
+    } catch (e) {}
+
+    return null;
+  }
+
+  var JpStorage = {
+    getSyncState: function () {
+      return syncState;
+    },
+
+    onSyncChange: function (fn) {
+      listeners.push(fn);
+    },
+
+    getConfig: getGitHubConfig,
+    saveConfig: saveGitHubConfig,
+    testConnection: testGitHubConnection,
+
+    /**
+     * Tải toàn bộ dữ liệu (tự động giải mã payload an toàn)
+     */
+    loadData: async function () {
+      syncState.status = 'syncing';
+      syncState.message = 'Đang tải dữ liệu concept...';
+      notifySyncChange();
+
+      var data = await fetchRemoteData();
+      if (!data) {
+        data = { concepts: [], lastReset: null };
+      }
+
+      // Lưu cache local
+      try {
+        localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data));
+      } catch (e) {}
+
+      var cfg = getGitHubConfig();
+      if (!cfg.token) {
+        syncState.status = 'local-only';
+        syncState.message = 'Chế độ Local (Nhập Token GitHub trong Admin để đồng bộ đám mây)';
+      }
+      notifySyncChange();
+
+      return data;
+    },
+
+    /**
+     * Lưu dữ liệu: Mã hóa bằng JpCrypto và lưu vào LocalStorage + Tự động commit lên GitHub nếu có token
+     */
+    saveData: async function (dataObj, commitMsg) {
+      if (!dataObj || !dataObj.concepts) return false;
+
+      // 1. Lưu Local Cache
+      try {
+        localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(dataObj));
+      } catch (e) {}
+
+      // 2. Mã hóa dữ liệu bảo mật
+      var envelope = await window.JpCrypto.encrypt(dataObj);
+
+      // 3. Đẩy lên GitHub
+      var cfg = getGitHubConfig();
+      if (cfg.token && cfg.autoSync) {
+        pushEnvelopeToGitHub(envelope, commitMsg || 'Update concepts and votes [skip ci]');
+      }
+
+      return true;
+    },
+
+    /**
+     * Đồng bộ thủ công đẩy toàn bộ dữ liệu hiện tại lên GitHub
+     */
+    manualPush: async function (dataObj) {
+      var envelope = await window.JpCrypto.encrypt(dataObj);
+      return pushEnvelopeToGitHub(envelope, 'Manual sync from Admin Panel [skip ci]');
+    },
+
+    /**
+     * Kéo dữ liệu mới nhất từ GitHub về đè lên local
+     */
+    manualPull: async function () {
+      return this.loadData();
+    },
+
+    /**
+     * Lấy danh sách các concept mà trình duyệt hiện tại đã vote
+     */
+    getVotedMap: function () {
+      try {
+        var raw = localStorage.getItem(LOCAL_VOTED_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        return {};
+      }
+    },
+
+    /**
+     * Đánh dấu đã vote cho 1 concept trên trình duyệt này
+     */
+    setVoted: function (conceptId) {
+      var map = this.getVotedMap();
+      map[conceptId] = Date.now();
+      try {
+        localStorage.setItem(LOCAL_VOTED_KEY, JSON.stringify(map));
+      } catch (e) {}
+    },
+
+    /**
+     * Xóa đánh dấu vote (khi admin reset vote)
+     */
+    clearVotedMap: function () {
+      try {
+        localStorage.removeItem(LOCAL_VOTED_KEY);
+      } catch (e) {}
+    },
+  };
+
+  window.JpStorage = JpStorage;
+})(window);
