@@ -173,7 +173,7 @@
       }
     },
 
-    // Màn hình Đăng nhập bằng GitHub Access Token (Duy nhất & Chuẩn nhất)
+    // Màn hình Đăng nhập bằng GitHub Access Token
     renderLogin: function (container, appState, onDataChange) {
       var self = this;
       var savedConfig = window.JpStorage.getConfig();
@@ -182,15 +182,15 @@
         '<div class="admin-wrap" style="max-width:480px;">' +
         '<h2>🔐 Đăng Nhập Quản Trị Admin</h2>' +
         '<p style="font-size:0.88rem; color:var(--ink-soft); margin-bottom:18px; line-height:1.5;">' +
-        'Vui lòng nhập <strong>GitHub Personal Access Token</strong> của bạn để xác thực quyền quản trị và kích hoạt đồng bộ dữ liệu.' +
+        'Vui lòng nhập <strong>GitHub Personal Access Token</strong> của bạn để xác thực quyền quản trị và quản lý hệ thống.' +
         '</p>' +
         '<div class="field">' +
         '<label for="token-login-inp">GitHub Personal Access Token (PAT)</label>' +
         '<input type="password" id="token-login-inp" value="' + escapeHtml(savedConfig.token || '') + '" placeholder="Dán mã ghp_... hoặc github_pat_..." autocomplete="off">' +
-        '<div class="field-hint">Token được dùng để xác thực quyền ghi nội dung và lưu trữ dữ liệu an toàn lên repo.</div>' +
+        '<div class="field-hint">Token được dùng để xác thực quyền sở hữu repository của Admin.</div>' +
         '</div>' +
         '<div class="form-error" id="token-login-error"></div>' +
-        '<button class="btn btn-primary" id="token-login-btn" style="width:100%; padding:12px;">Đăng Nhập Quản Trị</button>' +
+        '<button class="btn btn-primary" id="token-login-btn" style="width:100%; padding:12px; font-size:0.95rem;">Đăng Nhập Quản Trị</button>' +
         '</div>';
 
       async function attemptTokenLogin() {
@@ -209,7 +209,7 @@
 
         var testRes = await window.JpStorage.testConnection({ token: token });
         if (testRes.success) {
-          window.JpStorage.saveConfig({ token: token, autoSync: true });
+          window.JpStorage.saveConfig({ token: token });
           setAuth(true);
           window.showToast('✅ Đăng nhập bằng GitHub Token thành công!');
           self.renderDashboard(container, appState, onDataChange);
@@ -361,7 +361,7 @@
         '<h2>🛠️ Bảng Quản trị Concept</h2>' +
         '</div>' +
         '<div class="admin-stats-chips">' +
-        '<span class="stat-chip" style="color:var(--gold); border-color:var(--gold);">☁️ Tự động đồng bộ: <strong>' + escapeHtml(ghConfig.owner + '/' + ghConfig.repo) + '</strong></span>' +
+        '<span class="stat-chip" style="color:var(--gold); border-color:var(--gold);">🔥 <strong>Firebase Realtime Live (&lt;50ms)</strong></span>' +
         '<span class="stat-chip">Tổng: <strong>' + concepts.length + '</strong> concept</span>' +
         '<span class="stat-chip">Tổng vote: <strong>' + totalVotes + '</strong></span>' +
         '<button class="btn btn-outline" id="admin-logout-btn" style="padding:6px 14px; font-size:0.85rem;">Đăng xuất</button>' +
@@ -556,10 +556,10 @@
         };
 
         appState.concepts.push(newConcept);
-        var res = await window.JpStorage.saveData(appState, 'Add concept "' + newConcept.name + '" [skip ci]');
+        var res = await window.JpStorage.saveData(appState);
         adminState.pendingNewAssets = [];
         if (res && res.success) {
-          window.showToast('🌸 Đã đăng concept và tự động đồng bộ lên GitHub thành công!');
+          window.showToast('🌸 Đã đăng concept và đồng bộ thời gian thực thành công!');
         } else {
           window.showToast('Đã thêm concept thành công!');
         }
@@ -604,7 +604,7 @@
         }
       }
 
-      // Lưu thay đổi Edit Concept & Tự Động Đồng Bộ Lên GitHub
+      // Lưu thay đổi Edit Concept
       container.querySelectorAll('[data-save-edit]').forEach(function (btn) {
         btn.addEventListener('click', async function () {
           var id = this.getAttribute('data-save-edit');
@@ -624,7 +624,7 @@
           if (!target) return;
 
           this.disabled = true;
-          this.textContent = '⏳ Đang lưu & đồng bộ...';
+          this.textContent = '⏳ Đang lưu...';
 
           target.name = name;
           target.imageUrl = img;
@@ -635,10 +635,10 @@
             target.votes = isNaN(v) ? 0 : Math.max(0, v);
           }
 
-          var res = await window.JpStorage.saveData(appState, 'Edit concept "' + target.name + '" [skip ci]');
+          var res = await window.JpStorage.saveData(appState);
           adminState.expandedEditId = null;
           if (res && res.success) {
-            window.showToast('✅ Đã cập nhật concept và đồng bộ lên GitHub!');
+            window.showToast('✅ Đã cập nhật concept thành công!');
           } else {
             window.showToast('Đã lưu thay đổi concept!');
           }
@@ -668,8 +668,8 @@
             var asset = target.assets.find(function (a) { return a.id === parts[1]; });
             if (asset && dataUrl) {
               asset.fileUrl = dataUrl;
-              await window.JpStorage.saveData(appState, 'Update asset in "' + target.name + '" [skip ci]');
-              window.showToast('Đã tải ảnh lên cho ấn phẩm "' + asset.title + '" và đồng bộ!');
+              await window.JpStorage.saveData(appState);
+              window.showToast('Đã tải ảnh lên cho ấn phẩm "' + asset.title + '"!');
               if (onDataChange) onDataChange();
               self.renderDashboard(container, appState, onDataChange);
             }
@@ -720,7 +720,7 @@
             fileUrl: link,
           });
 
-          await window.JpStorage.saveData(appState, 'Add asset to "' + target.name + '" [skip ci]');
+          await window.JpStorage.saveData(appState);
           window.showToast('Đã thêm ấn phẩm mới và đồng bộ!');
           if (onDataChange) onDataChange();
           self.renderDashboard(container, appState, onDataChange);
@@ -736,7 +736,7 @@
             var asset = target.assets.find(function (a) { return a.id === parts[1]; });
             if (asset) {
               asset.title = inp.value.trim();
-              await window.JpStorage.saveData(appState, 'Update asset title [skip ci]');
+              await window.JpStorage.saveData(appState);
             }
           }
         });
@@ -750,7 +750,7 @@
             var asset = target.assets.find(function (a) { return a.id === parts[1]; });
             if (asset) {
               asset.fileUrl = inp.value.trim();
-              await window.JpStorage.saveData(appState, 'Update asset file [skip ci]');
+              await window.JpStorage.saveData(appState);
             }
           }
         });
@@ -763,7 +763,7 @@
           var target = appState.concepts.find(function (c) { return c.id === parts[0]; });
           if (target && target.assets) {
             target.assets = target.assets.filter(function (a) { return a.id !== parts[1]; });
-            await window.JpStorage.saveData(appState, 'Delete asset from "' + target.name + '" [skip ci]');
+            await window.JpStorage.saveData(appState);
             window.showToast('Đã xóa ấn phẩm và đồng bộ!');
             if (onDataChange) onDataChange();
             self.renderDashboard(container, appState, onDataChange);
@@ -771,7 +771,7 @@
         });
       });
 
-      // Xóa Concept & Tự Động Đồng Bộ GitHub
+      // Xóa Concept
       container.querySelectorAll('[data-del-concept]').forEach(function (btn) {
         btn.addEventListener('click', async function () {
           var id = this.getAttribute('data-del-concept');
@@ -787,14 +787,14 @@
           if (adminState.expandedEditId === id) adminState.expandedEditId = null;
           if (adminState.expandedAssetsId === id) adminState.expandedAssetsId = null;
 
-          await window.JpStorage.saveData(appState, 'Delete concept "' + oldName + '" [skip ci]');
-          window.showToast('Đã xóa concept "' + oldName + '" và đồng bộ lên GitHub!');
+          await window.JpStorage.saveData(appState);
+          window.showToast('Đã xóa concept "' + oldName + '" thành công!');
           if (onDataChange) onDataChange();
           self.renderDashboard(container, appState, onDataChange);
         });
       });
 
-      // Reset Vote 1 Concept & Tự Động Đồng Bộ GitHub
+      // Reset Vote 1 Concept
       container.querySelectorAll('[data-reset-vote]').forEach(function (btn) {
         btn.addEventListener('click', async function () {
           var id = this.getAttribute('data-reset-vote');
@@ -806,14 +806,14 @@
           }
 
           target.votes = 0;
-          await window.JpStorage.saveData(appState, 'Reset votes for concept "' + target.name + '" [skip ci]');
-          window.showToast('Đã đặt lại số vote của "' + target.name + '" về 0 và đồng bộ lên GitHub!');
+          await window.JpStorage.saveData(appState);
+          window.showToast('Đã đặt lại số vote của "' + target.name + '" về 0!');
           if (onDataChange) onDataChange();
           self.renderDashboard(container, appState, onDataChange);
         });
       });
 
-      // Reset Toàn Bộ Vote & Tự Động Đồng Bộ GitHub
+      // Reset Toàn Bộ Vote
       var resetAllBtn = document.getElementById('reset-all-votes-btn');
       if (resetAllBtn) {
         resetAllBtn.addEventListener('click', async function () {
@@ -830,14 +830,14 @@
           appState.lastReset = Date.now();
           window.JpStorage.clearVotedMap();
 
-          await window.JpStorage.saveData(appState, 'Reset all concept votes to 0 [skip ci]');
-          window.showToast('Đã đặt lại tất cả lượt bình chọn về 0 và đồng bộ lên GitHub!');
+          await window.JpStorage.saveData(appState);
+          window.showToast('Đã đặt lại tất cả lượt bình chọn về 0!');
           if (onDataChange) onDataChange();
           self.renderDashboard(container, appState, onDataChange);
         });
       }
 
-      // Cài đặt Thời Hạn Bình Chọn & Tự Động Đồng Bộ GitHub
+      // Cài đặt Thời Hạn Bình Chọn
       var saveDeadlineBtn = document.getElementById('save-deadline-btn');
       if (saveDeadlineBtn) {
         saveDeadlineBtn.addEventListener('click', async function () {
@@ -856,9 +856,9 @@
           saveDeadlineBtn.textContent = '⏳ Đang lưu thời hạn...';
 
           appState.voteDeadline = targetDate.toISOString();
-          var res = await window.JpStorage.saveData(appState, 'Set voting deadline to ' + formatDateTime(appState.voteDeadline) + ' [skip ci]');
+          var res = await window.JpStorage.saveData(appState);
           if (res && res.success) {
-            window.showToast('✅ Đã lưu thời hạn bình chọn và đồng bộ lên GitHub!');
+            window.showToast('✅ Đã lưu thời hạn bình chọn thành công!');
           } else {
             window.showToast('Đã lưu thời hạn bình chọn!');
           }
@@ -876,9 +876,9 @@
           clearDeadlineBtn.textContent = '⏳ Đang gỡ...';
 
           appState.voteDeadline = null;
-          var res = await window.JpStorage.saveData(appState, 'Remove voting deadline [skip ci]');
+          var res = await window.JpStorage.saveData(appState);
           if (res && res.success) {
-            window.showToast('✅ Đã gỡ bỏ thời hạn bình chọn và đồng bộ lên GitHub!');
+            window.showToast('✅ Đã gỡ bỏ thời hạn bình chọn thành công!');
           } else {
             window.showToast('Đã gỡ bỏ thời hạn bình chọn!');
           }

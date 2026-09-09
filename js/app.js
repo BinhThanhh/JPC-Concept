@@ -430,14 +430,14 @@
     var target = appState.concepts.find(function (c) { return c.id === conceptId; });
     if (!target) return;
 
-    // Optimistic Update
+    // Optimistic Update ngay trên UI
     target.votes = (target.votes || 0) + 1;
     window.JpStorage.setVoted(conceptId);
     window.showToast('🌸 Cảm ơn bạn! Đã ghi nhận bình chọn cho "' + target.name + '"!');
     if (onComplete) onComplete();
 
-    // Mã hóa & Lưu trữ + Commit lên GitHub
-    await window.JpStorage.saveData(appState, 'Vote for concept "' + target.name + '" [skip ci]');
+    // Gửi trực tiếp lên Firebase Realtime Database (Tức thì, 0s build)
+    await window.JpStorage.voteConcept(conceptId);
   }
 
   // ---------- Khởi chạy Ứng Dụng (Init) ----------
@@ -445,12 +445,31 @@
     // 1. Khởi tạo Admin State
     window.JpAdmin.init();
 
-    // 2. Tải Dữ liệu từ GitHub / File data.json / Cache Local
+    // 2. Tải Dữ liệu từ Firebase Realtime DB / Local
     var loadedData = await window.JpStorage.loadData();
     appState.concepts = (loadedData && loadedData.concepts) ? loadedData.concepts : [];
     appState.lastReset = loadedData ? loadedData.lastReset : null;
     appState.voteDeadline = loadedData ? loadedData.voteDeadline : null;
     appState.loaded = true;
+
+    // 3. Đăng ký Real-time Live Listener từ Firebase: Nhảy số Live tức thì
+    window.JpStorage.onRealtimeUpdate(function (freshData) {
+      if (!freshData || !freshData.concepts) return;
+      appState.concepts = freshData.concepts || [];
+      appState.lastReset = freshData.lastReset || null;
+      appState.voteDeadline = freshData.voteDeadline || null;
+
+      var hash = location.hash || '#/';
+      var appContainer = document.getElementById('app');
+      if (!appContainer) return;
+
+      if (hash === '#/' || hash === '' || hash === '#') {
+        renderHome(appContainer);
+      } else if (hash.indexOf('#/concept/') === 0) {
+        var parts = hash.replace(/^#\/?/, '').split('/');
+        if (parts[1]) renderDetail(parts[1], appContainer);
+      }
+    });
 
     // 4. Thiết lập công tắc hoa anh đào
     var petalBtn = document.getElementById('petal-toggle-btn');
