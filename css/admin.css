@@ -35,6 +35,7 @@
 
 .field input[type="text"],
 .field input[type="password"],
+.field input[type="number"],
 .field textarea,
 .field select {
   width: 100%;

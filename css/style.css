@@ -126,6 +126,23 @@ header.site-header {
   transform: translateY(-1px);
 }
 
+.brand-logo-img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 10px var(--gold-glow);
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.brand:hover .brand-logo-img {
+  box-shadow: 0 2px 12px rgba(184, 134, 11, 0.6);
+  border-color: var(--gold-light);
+}
+
 .brand-emblem {
   width: 38px;
   height: 38px;

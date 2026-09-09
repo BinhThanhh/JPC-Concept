@@ -213,11 +213,12 @@
     }
   }
 
-  // Helper tải dữ liệu ban đầu
+  // Helper tải dữ liệu ban đầu và hợp nhất thông minh với Local Storage
   async function fetchRemoteData() {
     var config = getGitHubConfig();
+    var remoteData = null;
 
-    // 1. Thử lấy từ GitHub Raw hoặc API nếu có token
+    // 1. Thử lấy từ GitHub Raw hoặc API nếu có token (dành cho Admin)
     if (config.token) {
       try {
         var apiUrl = 'https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/' + config.path + '?ref=' + config.branch + '&t=' + Date.now();
@@ -235,11 +236,11 @@
           var rawJson = JSON.parse(decodedContent);
           var decrypted = await window.JpCrypto.decrypt(rawJson);
           if (decrypted && decrypted.concepts) {
+            remoteData = decrypted;
             syncState.status = 'success';
             syncState.message = 'Đã tải dữ liệu mới nhất từ GitHub';
             syncState.lastSyncTime = new Date();
             notifySyncChange();
-            return decrypted;
           }
         }
       } catch (e) {
@@ -248,31 +249,94 @@
     }
 
     // 2. Thử tải file tĩnh data/data.json đi kèm trang web
-    try {
-      var staticRes = await fetch('data/data.json?t=' + Date.now());
-      if (staticRes.ok) {
-        var rawStaticJson = await staticRes.json();
-        var decryptedStatic = await window.JpCrypto.decrypt(rawStaticJson);
-        if (decryptedStatic && decryptedStatic.concepts) {
-          return decryptedStatic;
+    if (!remoteData) {
+      try {
+        var staticRes = await fetch('data/data.json?t=' + Date.now());
+        if (staticRes.ok) {
+          var rawStaticJson = await staticRes.json();
+          var decryptedStatic = await window.JpCrypto.decrypt(rawStaticJson);
+          if (decryptedStatic && decryptedStatic.concepts) {
+            remoteData = decryptedStatic;
+          }
         }
+      } catch (e) {
+        console.warn('Không thể tải data/data.json tĩnh:', e);
       }
-    } catch (e) {
-      console.warn('Không thể tải data/data.json tĩnh:', e);
     }
 
-    // 3. Lấy từ Cache LocalStorage
+    // 3. Đọc Local Cache và Voted Map từ LocalStorage
+    var localCached = null;
     try {
       var cached = localStorage.getItem(LOCAL_CACHE_KEY);
       if (cached) {
-        var parsedCache = JSON.parse(cached);
-        if (parsedCache && parsedCache.concepts) {
-          return parsedCache;
-        }
+        localCached = JSON.parse(cached);
       }
     } catch (e) {}
 
-    return null;
+    var votedMap = {};
+    try {
+      var rawVoted = localStorage.getItem(LOCAL_VOTED_KEY);
+      if (rawVoted) votedMap = JSON.parse(rawVoted);
+    } catch (e) {}
+
+    // Nếu không có remoteData thì dùng localCached
+    if (!remoteData) {
+      return localCached;
+    }
+
+    // Nếu có remoteData nhưng không có localCached:
+    if (!localCached || !localCached.concepts) {
+      if (remoteData.concepts) {
+        remoteData.concepts.forEach(function (c) {
+          if (votedMap[c.id] && (!c.votes || c.votes < 1)) {
+            c.votes = 1;
+          }
+        });
+      }
+      return remoteData;
+    }
+
+    // Kiểm tra nếu Admin đã thực hiện Reset Vote trên GitHub (lastReset trên GitHub mới hơn local)
+    var remoteReset = remoteData.lastReset || 0;
+    var localReset = localCached.lastReset || 0;
+    if (remoteReset > localReset) {
+      // Admin đã reset trên GitHub -> xóa bỏ voted map của client
+      try {
+        localStorage.removeItem(LOCAL_VOTED_KEY);
+      } catch (e) {}
+      return remoteData;
+    }
+
+    // HỢP NHẤT THÔNG MINH (Smart Merge):
+    // Cập nhật thông tin mới nhất từ remote (Tên, Ảnh, Mô tả, Ấn phẩm đính kèm)
+    // Nhưng bảo toàn số vote từ local cache (tránh bị reset về 0 khi reload trang)
+    var localConceptMap = {};
+    (localCached.concepts || []).forEach(function (lc) {
+      localConceptMap[lc.id] = lc;
+    });
+
+    remoteData.concepts.forEach(function (rc) {
+      var lc = localConceptMap[rc.id];
+      if (lc) {
+        var maxVotes = Math.max(rc.votes || 0, lc.votes || 0);
+        if (votedMap[rc.id] && maxVotes === 0) {
+          maxVotes = 1;
+        }
+        rc.votes = maxVotes;
+      } else if (votedMap[rc.id] && (!rc.votes || rc.votes === 0)) {
+        rc.votes = 1;
+      }
+    });
+
+    // Nếu có concept mới tạo trên local mà chưa kịp push lên git
+    (localCached.concepts || []).forEach(function (lc) {
+      var existsInRemote = remoteData.concepts.some(function (rc) { return rc.id === lc.id; });
+      if (!existsInRemote) {
+        remoteData.concepts.push(lc);
+      }
+    });
+
+    return remoteData;
   }
 
   var JpStorage = {
@@ -320,7 +384,7 @@
      * Lưu dữ liệu: Mã hóa bằng JpCrypto và lưu vào LocalStorage + Tự động commit lên GitHub nếu có token
      */
     saveData: async function (dataObj, commitMsg) {
-      if (!dataObj || !dataObj.concepts) return false;
+      if (!dataObj || !dataObj.concepts) return { success: false, message: 'Dữ liệu không hợp lệ' };
 
       // 1. Lưu Local Cache
       try {
@@ -330,13 +394,13 @@
       // 2. Mã hóa dữ liệu bảo mật
       var envelope = await window.JpCrypto.encrypt(dataObj);
 
-      // 3. Đẩy lên GitHub
+      // 3. Tự động đẩy lên GitHub
       var cfg = getGitHubConfig();
       if (cfg.token && cfg.autoSync) {
-        pushEnvelopeToGitHub(envelope, commitMsg || 'Update concepts and votes [skip ci]');
+        return await pushEnvelopeToGitHub(envelope, commitMsg || 'Update concepts and votes [skip ci]');
       }
 
-      return true;
+      return { success: true, localOnly: true };
     },
 
     /**

@@ -205,6 +205,10 @@
             '<label>Tên concept</label>' +
             '<input type="text" id="edit-name-' + c.id + '" value="' + escapeHtml(c.name) + '">' +
             '</div>' +
+            '<div class="field" style="max-width:220px;">' +
+            '<label>Số lượt bình chọn (Vote count)</label>' +
+            '<input type="number" id="edit-votes-' + c.id + '" value="' + (c.votes || 0) + '" min="0">' +
+            '</div>' +
             '<div class="field">' +
             '<label>Ảnh đại diện (Nhập link hoặc tải ảnh từ máy tính)</label>' +
             '<div class="input-file-group">' +
@@ -296,6 +300,7 @@
         '<h2>🛠️ Bảng Quản trị Concept</h2>' +
         '</div>' +
         '<div class="admin-stats-chips">' +
+        '<span class="stat-chip" style="color:var(--gold); border-color:var(--gold);">☁️ Tự động đồng bộ: <strong>' + escapeHtml(ghConfig.owner + '/' + ghConfig.repo) + '</strong></span>' +
         '<span class="stat-chip">Tổng: <strong>' + concepts.length + '</strong> concept</span>' +
         '<span class="stat-chip">Tổng vote: <strong>' + totalVotes + '</strong></span>' +
         '<button class="btn btn-outline" id="admin-logout-btn" style="padding:6px 14px; font-size:0.85rem;">Đăng xuất</button>' +
@@ -346,70 +351,10 @@
         '<button type="button" class="btn btn-outline" id="add-pending-asset-row-btn" style="margin-top:8px; font-size:0.84rem;">+ Thêm ấn phẩm đi kèm</button>' +
         '</div>' +
         '<div class="form-error" id="add-concept-error"></div>' +
-        '<button class="btn btn-primary" id="add-concept-btn" style="padding:12px 26px;">Đăng Concept</button>' +
+        '<button class="btn btn-primary" id="add-concept-btn" style="padding:12px 28px; font-size:0.95rem;">🌸 Đăng Concept & Đồng bộ GitHub</button>' +
         '</div>' +
 
-        // Block 3: Cấu hình GitHub Sync & Bảo Mật JSON
-        '<div class="admin-block github-config-card">' +
-        '<div class="admin-block-header">' +
-        '<h3>☁️ Đồng bộ & Bảo mật GitHub API</h3>' +
-        '<span class="security-badge">🔒 File JSON đã mã hóa AES</span>' +
-        '</div>' +
-        '<p style="font-size:0.88rem; color:#CFBA94; margin-bottom:16px;">' +
-        'Dữ liệu vote và concept được tự động mã hóa trước khi commit lên file <code>' + escapeHtml(ghConfig.path) + '</code> trên GitHub repo. ' +
-        'Người xem trực tiếp repo sẽ <strong>không thể đọc được số lượng vote</strong>.' +
-        '</p>' +
-        '<div class="github-status-box">' +
-        '<div class="github-status-text">' +
-        '<strong>Trạng thái:</strong> ' + escapeHtml(syncState.message || 'Chưa cấu hình') +
-        '</div>' +
-        '<div style="font-size:0.8rem; color:#CFBA94;">' +
-        (syncState.lastSyncTime ? 'Đồng bộ lúc: ' + new Date(syncState.lastSyncTime).toLocaleTimeString() : '') +
-        '</div>' +
-        '</div>' +
-        '<div class="github-config-grid">' +
-        '<div class="field">' +
-        '<label>GitHub Owner / Username</label>' +
-        '<input type="text" id="gh-owner" value="' + escapeHtml(ghConfig.owner) + '">' +
-        '</div>' +
-        '<div class="field">' +
-        '<label>GitHub Repository</label>' +
-        '<input type="text" id="gh-repo" value="' + escapeHtml(ghConfig.repo) + '">' +
-        '</div>' +
-        '<div class="field">' +
-        '<label>Branch</label>' +
-        '<input type="text" id="gh-branch" value="' + escapeHtml(ghConfig.branch) + '">' +
-        '</div>' +
-        '<div class="field">' +
-        '<label>File Path</label>' +
-        '<input type="text" id="gh-path" value="' + escapeHtml(ghConfig.path) + '">' +
-        '</div>' +
-        '</div>' +
-        '<div class="field">' +
-        '<label>GitHub Personal Access Token (PAT)</label>' +
-        '<input type="password" id="gh-token" value="' + escapeHtml(ghConfig.token) + '" placeholder="ghp_xxxxxxxxxxxx hoặc github_pat_xxxxxxxxxxxx">' +
-        '<div class="field-hint" style="color:#CFBA94;">Token cần quyền <code>repo</code> (hoặc <code>contents:write</code>) để ghi dữ liệu bình chọn trực tiếp lên GitHub repo.</div>' +
-        '</div>' +
-        '<div class="github-config-actions">' +
-        '<button type="button" class="btn btn-secondary" id="save-gh-config-btn">Lưu cấu hình</button>' +
-        '<button type="button" class="btn btn-outline" id="test-gh-btn" style="color:#FFF; border-color:var(--gold);">Kiểm tra kết nối</button>' +
-        '<button type="button" class="btn btn-outline" id="push-gh-btn" style="color:#FFF; border-color:var(--gold);">Đẩy dữ liệu lên GitHub (Push)</button>' +
-        '<button type="button" class="btn btn-outline" id="pull-gh-btn" style="color:#FFF; border-color:var(--gold);">Kéo dữ liệu từ GitHub (Pull)</button>' +
-        '</div>' +
-        '<div id="gh-test-result" style="margin-top:14px; font-size:0.88rem;"></div>' +
-        '</div>' +
-
-        // Block 4: Đổi Mật Khẩu Admin
-        '<div class="admin-block">' +
-        '<h3>🔑 Đổi Mật Khẩu Quản Trị</h3>' +
-        '<div class="field" style="max-width:380px;">' +
-        '<label for="change-pass-inp">Mật khẩu quản trị mới</label>' +
-        '<input type="password" id="change-pass-inp" placeholder="Nhập mật khẩu mới...">' +
-        '</div>' +
-        '<button type="button" class="btn btn-secondary" id="change-pass-btn" style="font-size:0.88rem;">Cập nhật mật khẩu</button>' +
-        '</div>' +
-
-        // Block 5: Sao lưu / Phục hồi
+        // Block 3: Sao lưu / Phục hồi
         '<div class="admin-block">' +
         '<h3>💾 Sao lưu & Phục hồi dữ liệu JSON</h3>' +
         '<p style="font-size:0.88rem; color:var(--ink-soft); margin-bottom:14px;">' +
@@ -445,19 +390,6 @@
           }
         });
       }
-
-      // Đổi Mật Khẩu Admin
-      document.getElementById('change-pass-btn').addEventListener('click', async function () {
-        var newPass = document.getElementById('change-pass-inp').value.trim();
-        if (!newPass) {
-          window.showToast('Vui lòng nhập mật khẩu mới.');
-          return;
-        }
-        var hashed = await hashPassword(newPass);
-        setAdminPasswordHash(hashed);
-        document.getElementById('change-pass-inp').value = '';
-        window.showToast('Đã đổi mật khẩu quản trị thành công!');
-      });
 
       // Gắn sự kiện đăng xuất
       document.getElementById('admin-logout-btn').addEventListener('click', function () {
@@ -522,7 +454,7 @@
         renderPendingAssets();
       });
 
-      // Thêm Concept Mới
+      // Thêm Concept Mới & Tự Động Đồng Bộ Lên GitHub
       document.getElementById('add-concept-btn').addEventListener('click', async function () {
         var name = document.getElementById('f-name').value.trim();
         var img = document.getElementById('f-img').value.trim();
@@ -536,7 +468,7 @@
         }
         errEl.textContent = '';
         this.disabled = true;
-        this.textContent = 'Đang lưu & đồng bộ...';
+        this.textContent = '⏳ Đang đăng & đồng bộ GitHub...';
 
         var newConcept = {
           id: 'concept-' + Date.now(),
@@ -558,9 +490,13 @@
         };
 
         appState.concepts.push(newConcept);
-        await window.JpStorage.saveData(appState, 'Add concept "' + newConcept.name + '" [skip ci]');
+        var res = await window.JpStorage.saveData(appState, 'Add concept "' + newConcept.name + '" [skip ci]');
         adminState.pendingNewAssets = [];
-        window.showToast('Đã thêm concept "' + newConcept.name + '" thành công!');
+        if (res && res.success) {
+          window.showToast('🌸 Đã đăng concept và tự động đồng bộ lên GitHub thành công!');
+        } else {
+          window.showToast('Đã thêm concept thành công!');
+        }
         if (onDataChange) onDataChange();
         self.renderDashboard(container, appState, onDataChange);
       });
@@ -602,7 +538,7 @@
         }
       }
 
-      // Lưu thay đổi Edit Concept
+      // Lưu thay đổi Edit Concept & Tự Động Đồng Bộ Lên GitHub
       container.querySelectorAll('[data-save-edit]').forEach(function (btn) {
         btn.addEventListener('click', async function () {
           var id = this.getAttribute('data-save-edit');
@@ -610,6 +546,7 @@
           var img = document.getElementById('edit-img-' + id).value.trim();
           var desc = document.getElementById('edit-desc-' + id).value.trim();
           var justify = document.getElementById('edit-justify-' + id).value.trim();
+          var votesInp = document.getElementById('edit-votes-' + id);
           var errEl = document.getElementById('edit-error-' + id);
 
           if (!name || !img || !desc) {
@@ -621,16 +558,24 @@
           if (!target) return;
 
           this.disabled = true;
-          this.textContent = 'Đang lưu...';
+          this.textContent = '⏳ Đang lưu & đồng bộ...';
 
           target.name = name;
           target.imageUrl = img;
           target.description = desc;
           target.justification = justify;
+          if (votesInp) {
+            var v = parseInt(votesInp.value, 10);
+            target.votes = isNaN(v) ? 0 : Math.max(0, v);
+          }
 
-          await window.JpStorage.saveData(appState, 'Edit concept "' + target.name + '" [skip ci]');
+          var res = await window.JpStorage.saveData(appState, 'Edit concept "' + target.name + '" [skip ci]');
           adminState.expandedEditId = null;
-          window.showToast('Đã cập nhật thông tin concept!');
+          if (res && res.success) {
+            window.showToast('✅ Đã cập nhật concept và đồng bộ lên GitHub!');
+          } else {
+            window.showToast('Đã lưu thay đổi concept!');
+          }
           if (onDataChange) onDataChange();
           self.renderDashboard(container, appState, onDataChange);
         });
@@ -657,8 +602,8 @@
             var asset = target.assets.find(function (a) { return a.id === parts[1]; });
             if (asset && dataUrl) {
               asset.fileUrl = dataUrl;
-              await window.JpStorage.saveData(appState);
-              window.showToast('Đã tải ảnh lên cho ấn phẩm "' + asset.title + '"!');
+              await window.JpStorage.saveData(appState, 'Update asset in "' + target.name + '" [skip ci]');
+              window.showToast('Đã tải ảnh lên cho ấn phẩm "' + asset.title + '" và đồng bộ!');
               if (onDataChange) onDataChange();
               self.renderDashboard(container, appState, onDataChange);
             }
@@ -710,7 +655,7 @@
           });
 
           await window.JpStorage.saveData(appState, 'Add asset to "' + target.name + '" [skip ci]');
-          window.showToast('Đã thêm ấn phẩm mới!');
+          window.showToast('Đã thêm ấn phẩm mới và đồng bộ!');
           if (onDataChange) onDataChange();
           self.renderDashboard(container, appState, onDataChange);
         });
@@ -725,7 +670,7 @@
             var asset = target.assets.find(function (a) { return a.id === parts[1]; });
             if (asset) {
               asset.title = inp.value.trim();
-              await window.JpStorage.saveData(appState);
+              await window.JpStorage.saveData(appState, 'Update asset title [skip ci]');
             }
           }
         });
@@ -739,7 +684,7 @@
             var asset = target.assets.find(function (a) { return a.id === parts[1]; });
             if (asset) {
               asset.fileUrl = inp.value.trim();
-              await window.JpStorage.saveData(appState);
+              await window.JpStorage.saveData(appState, 'Update asset file [skip ci]');
             }
           }
         });
@@ -753,14 +698,14 @@
           if (target && target.assets) {
             target.assets = target.assets.filter(function (a) { return a.id !== parts[1]; });
             await window.JpStorage.saveData(appState, 'Delete asset from "' + target.name + '" [skip ci]');
-            window.showToast('Đã xóa ấn phẩm!');
+            window.showToast('Đã xóa ấn phẩm và đồng bộ!');
             if (onDataChange) onDataChange();
             self.renderDashboard(container, appState, onDataChange);
           }
         });
       });
 
-      // Xóa Concept
+      // Xóa Concept & Tự Động Đồng Bộ GitHub
       container.querySelectorAll('[data-del-concept]').forEach(function (btn) {
         btn.addEventListener('click', async function () {
           var id = this.getAttribute('data-del-concept');
@@ -771,18 +716,19 @@
             return;
           }
 
+          var oldName = target.name;
           appState.concepts = appState.concepts.filter(function (c) { return c.id !== id; });
           if (adminState.expandedEditId === id) adminState.expandedEditId = null;
           if (adminState.expandedAssetsId === id) adminState.expandedAssetsId = null;
 
-          await window.JpStorage.saveData(appState, 'Delete concept "' + target.name + '" [skip ci]');
-          window.showToast('Đã xóa concept "' + target.name + '" thành công!');
+          await window.JpStorage.saveData(appState, 'Delete concept "' + oldName + '" [skip ci]');
+          window.showToast('Đã xóa concept "' + oldName + '" và đồng bộ lên GitHub!');
           if (onDataChange) onDataChange();
           self.renderDashboard(container, appState, onDataChange);
         });
       });
 
-      // Reset Vote 1 Concept
+      // Reset Vote 1 Concept & Tự Động Đồng Bộ GitHub
       container.querySelectorAll('[data-reset-vote]').forEach(function (btn) {
         btn.addEventListener('click', async function () {
           var id = this.getAttribute('data-reset-vote');
@@ -795,13 +741,13 @@
 
           target.votes = 0;
           await window.JpStorage.saveData(appState, 'Reset votes for concept "' + target.name + '" [skip ci]');
-          window.showToast('Đã đặt lại số vote của "' + target.name + '" về 0.');
+          window.showToast('Đã đặt lại số vote của "' + target.name + '" về 0 và đồng bộ lên GitHub!');
           if (onDataChange) onDataChange();
           self.renderDashboard(container, appState, onDataChange);
         });
       });
 
-      // Reset Toàn Bộ Vote
+      // Reset Toàn Bộ Vote & Tự Động Đồng Bộ GitHub
       var resetAllBtn = document.getElementById('reset-all-votes-btn');
       if (resetAllBtn) {
         resetAllBtn.addEventListener('click', async function () {
@@ -810,7 +756,7 @@
           }
 
           resetAllBtn.disabled = true;
-          resetAllBtn.textContent = 'Đang reset toàn bộ...';
+          resetAllBtn.textContent = '⏳ Đang reset toàn bộ...';
 
           appState.concepts.forEach(function (c) {
             c.votes = 0;
@@ -819,82 +765,13 @@
           window.JpStorage.clearVotedMap();
 
           await window.JpStorage.saveData(appState, 'Reset all concept votes to 0 [skip ci]');
-          window.showToast('Đã đặt lại tất cả lượt bình chọn về 0 thành công!');
+          window.showToast('Đã đặt lại tất cả lượt bình chọn về 0 và đồng bộ lên GitHub!');
           if (onDataChange) onDataChange();
           self.renderDashboard(container, appState, onDataChange);
         });
       }
 
-      // Lưu Cấu hình GitHub
-      document.getElementById('save-gh-config-btn').addEventListener('click', function () {
-        var owner = document.getElementById('gh-owner').value.trim();
-        var repo = document.getElementById('gh-repo').value.trim();
-        var branch = document.getElementById('gh-branch').value.trim();
-        var path = document.getElementById('gh-path').value.trim();
-        var token = document.getElementById('gh-token').value.trim();
-
-        window.JpStorage.saveConfig({
-          owner: owner,
-          repo: repo,
-          branch: branch,
-          path: path,
-          token: token,
-          autoSync: true,
-        });
-
-        window.showToast('Đã lưu cấu hình GitHub!');
-        self.renderDashboard(container, appState, onDataChange);
-      });
-
-      // Kiểm tra kết nối GitHub
-      document.getElementById('test-gh-btn').addEventListener('click', async function () {
-        var resultEl = document.getElementById('gh-test-result');
-        resultEl.innerHTML = '<span style="color:#CFBA94;">⏳ Đang kiểm tra kết nối tới GitHub API...</span>';
-
-        var owner = document.getElementById('gh-owner').value.trim();
-        var repo = document.getElementById('gh-repo').value.trim();
-        var branch = document.getElementById('gh-branch').value.trim();
-        var path = document.getElementById('gh-path').value.trim();
-        var token = document.getElementById('gh-token').value.trim();
-
-        var res = await window.JpStorage.testConnection({ owner: owner, repo: repo, branch: branch, path: path, token: token });
-        if (res.success) {
-          resultEl.innerHTML = '<span style="color:#6BE585;">✅ ' + escapeHtml(res.message) + '</span>';
-        } else {
-          resultEl.innerHTML = '<span style="color:#FF7675;">❌ ' + escapeHtml(res.message) + '</span>';
-        }
-      });
-
-      // Đẩy dữ liệu lên GitHub thủ công
-      document.getElementById('push-gh-btn').addEventListener('click', async function () {
-        this.disabled = true;
-        this.textContent = 'Đang đẩy lên GitHub...';
-        var res = await window.JpStorage.manualPush(appState);
-        if (res.success) {
-          window.showToast('Đã đẩy toàn bộ dữ liệu lên GitHub thành công!');
-        } else {
-          window.showToast('Lỗi đẩy dữ liệu lên GitHub: ' + (res.reason || 'Xem lại Token/Quyền'));
-        }
-        self.renderDashboard(container, appState, onDataChange);
-      });
-
-      // Kéo dữ liệu từ GitHub thủ công
-      document.getElementById('pull-gh-btn').addEventListener('click', async function () {
-        this.disabled = true;
-        this.textContent = 'Đang tải từ GitHub...';
-        var data = await window.JpStorage.manualPull();
-        if (data && data.concepts) {
-          appState.concepts = data.concepts;
-          appState.lastReset = data.lastReset;
-          window.showToast('Đã kéo dữ liệu mới nhất từ GitHub!');
-          if (onDataChange) onDataChange();
-        } else {
-          window.showToast('Không thể tải dữ liệu từ GitHub.');
-        }
-        self.renderDashboard(container, appState, onDataChange);
-      });
-
-      // Xuất JSON
+      // Xuất JSON Backup
       document.getElementById('export-json-btn').addEventListener('click', function () {
         var str = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(appState, null, 2));
         var downloadAnchor = document.createElement('a');
@@ -905,7 +782,7 @@
         downloadAnchor.remove();
       });
 
-      // Nhập JSON
+      // Nhập JSON Backup & Tự Động Đồng Bộ GitHub
       document.getElementById('import-json-file').addEventListener('change', function (e) {
         var file = e.target.files[0];
         if (!file) return;
@@ -917,7 +794,7 @@
               appState.concepts = imported.concepts;
               appState.lastReset = imported.lastReset;
               await window.JpStorage.saveData(appState, 'Imported concepts JSON backup [skip ci]');
-              window.showToast('Đã nạp dữ liệu từ file JSON thành công!');
+              window.showToast('Đã nạp dữ liệu từ file JSON và đồng bộ lên GitHub!');
               if (onDataChange) onDataChange();
               self.renderDashboard(container, appState, onDataChange);
             } else {
