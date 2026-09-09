@@ -72,7 +72,7 @@
 
   // Kiểm tra kết nối GitHub API với Token
   async function testGitHubConnection(cfg) {
-    var config = cfg || getGitHubConfig();
+    var config = Object.assign({}, getGitHubConfig(), cfg || {});
     if (!config.token) {
       return { success: false, message: 'Chưa nhập GitHub Personal Access Token.' };
     }
@@ -89,13 +89,28 @@
         var data = await res.json();
         return {
           success: true,
-          message: 'Kết nối thành công tới repo ' + data.full_name + ' (Quyền: ' + (data.permissions ? (data.permissions.push ? 'Push OK' : 'Read only') : 'OK') + ')',
+          message: 'Kết nối thành công tới repo ' + data.full_name,
           repo: data,
         };
       } else if (res.status === 401) {
         return { success: false, message: 'Token không hợp lệ hoặc đã hết hạn (401 Unauthorized).' };
       } else if (res.status === 404) {
-        return { success: false, message: 'Không tìm thấy repository hoặc Token không có quyền truy cập repo này (404 Not Found).' };
+        // Thử kiểm tra qua contents endpoint (dành cho Fine-Grained Token)
+        var contentRes = await fetch('https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/' + config.path + '?ref=' + config.branch, {
+          headers: {
+            Authorization: 'Bearer ' + config.token.trim(),
+            Accept: 'application/vnd.github.v3+json',
+          },
+        });
+        if (contentRes.status === 200) {
+          var cData = await contentRes.json();
+          syncState.githubSha = cData.sha;
+          return {
+            success: true,
+            message: 'Kết nối thành công tới repo ' + config.owner + '/' + config.repo,
+          };
+        }
+        return { success: false, message: 'Không tìm thấy repository (' + config.owner + '/' + config.repo + ') hoặc Token không có quyền truy cập repo này (404 Not Found).' };
       } else {
         return { success: false, message: 'Lỗi GitHub API: HTTP ' + res.status };
       }
